@@ -1,0 +1,28 @@
+[DEFAULT]
+
+# The base url for which to prepend requests.
+base_url=/freki
+
+# The static url; where to find the static files (which will
+# include things like javascript and CSS)
+static_url=%(base_url)s/static
+
+# If any modules are required and not installable
+# for some reason, they can be added dynamically to
+# the PYTHONPATH variable at runtime here.
+pythonpath=/path/to/the/freki/package
+
+# This is the root to the directory under which
+# directories will be presented in the "dir" mode.
+freki_root=/path/to/freki-documents/
+
+# Default tags to be used in the drop-down menu.
+# 
+# The defaults are:
+# L (Language line)
+# G (Gloss line)
+# T (Translation line)
+# M (Meta line)
+# V (Vocabulary-translation pair)
+# O (NON-IGT line)
+tags=L,G,T,M,O,V

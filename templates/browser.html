@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Freki Editor</title>
+    {% include 'scripts.html' with context %}
+    <script type="text/javascript">
+        var selectedRow=null;
+        var baseUrl='{{ base_url }}';
+        var dir='{{ dir }}/';
+    </script>
+</head>
+<body>
+
+    <div id="mainwindow" style="height: 100vh; position:relative">
+        <div id="filelist" style="width:20%; float:left; max-height:95vh; overflow:scroll">
+            {% for path in contents %}
+                <div class="filerow" filename="{{ path }}" onclick="selectRow(this)">{{ path }}</div>
+             {% endfor %}
+        </div>
+        <div id="editor" style="width:79%; float:left; max-height:97vh; overflow: scroll">
+            panel-content
+        </div>
+    </div>
+
+{#<div id="mainwindow" class="easyui-layout" style="width: 100%;height: 100%">#}
+{##}
+    {# Left-Hand Side Elements #}
+{#    <div id="files" class="easyui-panel" region="west" split="true" style="width:20%;min-width:90px">#}
+{#   #}
+{#    </div>#}
+{#    <div id="editor-panel" class="easyui-panel" region="center" split="true" title="Editor" style="width:80%"></div>#}
+{#</div>#}
+
+</body>
+</html>

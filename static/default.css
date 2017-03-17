@@ -1,0 +1,41 @@
+* {
+    font-family:Courier;
+}
+
+tr.tag-l{
+    background-color:#AEE7EE;
+}
+tr.tag-g{
+    background-color:#9DA5F9;
+}
+tr.tag-t{
+    background-color:#AFC9F6;
+}
+
+tr.tag-m{
+    background-color:bisque;
+}
+
+tr.tag-noisy{
+    background-color:#f99c9c;
+}
+
+tr.new-span td{
+    border-top:solid 10px crimson;
+}
+
+#save {
+    position:fixed;
+    top:10px;
+    right:10px;
+    padding:10px;
+}
+
+/* Display for the browser */
+.filerow {
+    font-family:Monaco;
+}
+
+.selected-row {
+    background-color:cyan;
+}

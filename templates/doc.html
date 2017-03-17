@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Freki Doc</title>
+    {% include 'scripts.html' with context %}
+    <script type="text/javascript">
+        var docId = '{{ doc_id }}';
+        var baseUrl = '{{ base_url }}';
+    </script>
+</head>
+<body>
+{%- from 'line.html' import line %}
+<TABLE>
+    {%- for fb in fd.blocks -%}
+        {% for fl in fb.lines %}
+            {{ line(fl, tags, fd) }}
+        {% endfor -%}
+<TR class="nullrow"><TD>&nbsp;</TD></TR>
+    {% endfor %}
+</TABLE>
+
+<DIV id="save">
+    <BUTTON type="button" onclick="save()">Save</BUTTON>
+</DIV>
+
+</body>
+</html>

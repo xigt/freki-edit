@@ -1,0 +1,39 @@
+{%- macro line(fl, tags, fd) -%}
+    {%- set cur_tag = fl.tag.split('+')[0] -%}
+    {#- Deal with the class of the tag -#}
+    {%- if cur_tag.startswith('*') -%}
+        {%- set tag_class='noisy' -%}
+    {%- else -%}
+        {%- set tag_class=cur_tag.lower() -%}
+    {%- endif -%}
+    {#- The drop-down for new_span, prev_span -#}
+    {%- if fl.lineno > 1 -%}
+        {%- set same_span=fd.linemap[fl.lineno-1].span_id == fl.span_id -%}
+    {%- else -%}
+        {%- set same_span=false -%}
+    {%- endif -%}
+    {#-  -#}
+<TR class="linerow tag-{{ tag_class }}{% if fl.span_id and not same_span %} new-span{% endif %}">
+        <TD class="lineno" lineno="{{ fl.lineno }}">{{ fl.lineno }}</TD>
+        {#  -#}
+        {# The drop-down for the tag... -#}
+        <TD>
+            <SELECT class="tag-select" onchange="tagSelect(this)">
+            {%- if cur_tag not in tags %}
+                <OPTION value="{{ cur_tag }}" selected>{{ cur_tag }}</OPTION>
+            {%- endif %}
+            {%- for tag in tags %}
+                <OPTION value="{{ tag }}" {% if tag==cur_tag %}selected{% endif %}>{{ tag }}</OPTION>
+            {%- endfor %}
+            </SELECT>
+        </TD>
+        <TD>
+            <SELECT class="span-select" onchange="spanSelect(this)" {% if cur_tag == 'O' %}style="display:none;"{% endif %}>
+                <OPTION value="new-span">New Span</OPTION>
+                <OPTION value="prev-span" {% if same_span %}selected="true"{% endif %}>...</OPTION>
+            </SELECT>
+        </TD>
+        {#- The line content #}
+        <TD>{{ fl }}</TD>
+</TR>
+{% endmacro %}
