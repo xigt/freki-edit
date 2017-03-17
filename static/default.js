@@ -7,7 +7,14 @@ function spanSelect(obj) {
 }
 
 function getTag(trObj) {
-    return $(trObj).find('.tag-select').val().toLowerCase();
+    var primaryTag = $(trObj).find('.tag-select').val().toLowerCase();
+    var secondaryTag = $(trObj).find('.secondary-tag').val().toLowerCase();
+    var tertiaryTag = $(trObj).find('.tertiary-tag').val().toLowerCase();
+    // Return the resulting tags, joined with a hyphen.
+    if (primaryTag == 'o')
+        return 'o';
+    else
+        return [primaryTag,secondaryTag,tertiaryTag].filter(function(x){return x}).join('-');
 }
 
 function getSpan(trObj) {
@@ -48,13 +55,20 @@ function tagSelect(obj) {
     /* Toggle the visibility of the span selector on
         Whether the tag is O or not. */
     var spanSel = trObj.find('.span-select');
+    var secondaryTag = trObj.find('.secondary-tag');
+    var tertiaryTag = trObj.find('.tertiary-tag');
+
     if (tagVal == 'O') {
-        spanSel.css('display', 'none');
+        spanSel.hide();
+        secondaryTag.hide();
+        tertiaryTag.hide();
         trObj.find('td').each(function() {
            $(this).removeClass('new-span');
         });
     } else {
-        spanSel.css('display', 'block');
+        spanSel.show();
+        secondaryTag.show();
+        tertiaryTag.show();
     }
 
     toggleSpan(trObj);

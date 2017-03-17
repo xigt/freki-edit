@@ -1,10 +1,11 @@
 {%- macro line(fl, tags, fd) -%}
     {%- set cur_tag = fl.tag.split('+')[0] -%}
+    {%- set mul_tags = cur_tag.split('-') %}
     {#- Deal with the class of the tag -#}
-    {%- if cur_tag.startswith('*') -%}
+    {%- if mul_tags[0].startswith('*') -%}
         {%- set tag_class='noisy' -%}
     {%- else -%}
-        {%- set tag_class=cur_tag.lower() -%}
+        {%- set tag_class=mul_tags[0].lower() -%}
     {%- endif -%}
     {#- The drop-down for new_span, prev_span -#}
     {%- if fl.lineno > 1 -%}
@@ -19,12 +20,34 @@
         {# The drop-down for the tag... -#}
         <TD>
             <SELECT class="tag-select" onchange="tagSelect(this)">
-            {%- if cur_tag not in tags %}
-                <OPTION value="{{ cur_tag }}" selected>{{ cur_tag }}</OPTION>
+            {%- if mul_tags[0] not in tags %}
+                <OPTION value="{{ mul_tags[0] }}" selected>{{ mul_tags[0] }}</OPTION>
             {%- endif %}
             {%- for tag in tags %}
-                <OPTION value="{{ tag }}" {% if tag==cur_tag %}selected{% endif %}>{{ tag }}</OPTION>
+                <OPTION value="{{ tag }}" {% if tag==mul_tags[0] %}selected{% endif %}>{{ tag }}</OPTION>
             {%- endfor %}
+            </SELECT>
+        </TD>
+        {#- Secondary Tag -#}
+        <TD>
+            <SELECT class="secondary-tag" {% if tag_class == 'o' %}style="display:none;"{% endif %}>
+                <OPTION value=""> </OPTION>
+                {% for tag in tags %}
+                    {% if tag != 'O' %}
+                        <OPTION value="{{ tag }}" {% if mul_tags|length > 1 and mul_tags[1] == tag %}selected{% endif %}>{{ tag }}</OPTION>
+                    {% endif %}
+                {% endfor %}
+            </SELECT>
+        </TD>
+        {#- Tertiary Tag -#}
+        <TD>
+            <SELECT class="tertiary-tag" {% if tag_class == 'o' %}style="display:none;"{% endif %}>
+                <OPTION value=""> </OPTION>
+                {% for tag in tags %}
+                    {% if tag != 'O' %}
+                        <OPTION value="{{ tag }}" {% if mul_tags|length > 2 and mul_tags[2] == tag %}selected{% endif %}>{{ tag }}</OPTION>
+                    {% endif %}
+                {% endfor %}
             </SELECT>
         </TD>
         <TD>
