@@ -16,6 +16,10 @@ tr.tag-m{
     background-color:bisque;
 }
 
+tr.tag-v{
+    background-color:lightgreen;
+}
+
 tr.tag-noisy{
     background-color:#f99c9c;
 }
