@@ -40,6 +40,10 @@ tr.new-span td{
     font-family:Monaco;
 }
 
+.filerow.modified {
+    border:2px lightpink solid;
+}
+
 .selected-row {
     background-color:cyan;
 }

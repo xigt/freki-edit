@@ -1,9 +1,10 @@
-import os, sys
+import os, sys, time
 from configparser import ConfigParser
 
 # =============================================================================
 # 1) CONFIG FILE
 # =============================================================================
+import sqlite3
 from flask import Response
 from flask import json
 from flask.templating import render_template
@@ -52,11 +53,15 @@ config['tags'] = c.get('tags').split(',')
 
 @app.route('/dir/<dir>')
 def hello_world(dir):
-    dir = os.path.join(freki_root, dir)
-    contents = os.listdir(dir)
+    full_dir_path = os.path.join(freki_root, dir)
+    contents = os.listdir(full_dir_path)
+    saves = modified_files(dir)
+    sys.stderr.write('{}\n'.format(saves))
+
     return render_template('browser.html',
                            contents=contents,
-                           dir=os.path.basename(dir),
+                           dir=dir,
+                           saves=saves,
                            **config)
 
 @app.route('/load/<dir>/<doc_id>')
@@ -103,6 +108,29 @@ def save(dir, doc_id):
 
     with open(path, 'w') as f:
         f.write(str(fd))
+    save_to_db(dir, doc_id)
 
     return json.jsonify({'success':True})
 
+# Just write that a file was saved, and the timestamp
+# so that we can log modifications.
+db_path = os.path.join(os.path.dirname(__file__), 'saves.db')
+def save_to_db(dir, file):
+    db = sqlite3.connect(db_path)
+    db.execute("""CREATE TABLE IF NOT EXISTS saves
+                                        (dir TEXT,
+                                        file TEXT,
+                                        modified REAL)""")
+
+    db.execute("""INSERT OR REPLACE INTO saves VALUES ('{}', '{}', {})""".format(dir, file, time.time()))
+    db.commit()
+
+    db.close()
+
+def modified_files(dir):
+    if not os.path.exists(db_path):
+        return set([])
+    else:
+        db = sqlite3.connect(db_path)
+        c = db.execute("""SELECT * FROM saves WHERE dir = '{}'""".format(dir))
+        return {file for dir, file, timestamp in c.fetchall()}

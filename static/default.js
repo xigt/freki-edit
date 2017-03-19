@@ -110,6 +110,7 @@ function save() {
 
 function saveSuccess(data) {
     alert("Saved successfully");
+    selectedRow.addClass('modified');
 }
 
 function saveError(data) {
