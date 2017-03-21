@@ -125,13 +125,13 @@ function selectRow(obj) {
     selectedRow.addClass("selected-row");
 
     var filename = $(obj).attr('filename');
-    console.log(baseUrl+'/load/'+dir+filename);
+    console.log(baseUrl+'/load/'+enteredDir+filename);
 
     $.ajax({
         method:'GET',
         contentType:'html',
         success:selectSuccess,
-        url:baseUrl+'/load/'+dir+filename
+        url:baseUrl+'/load/'+enteredDir+filename
     });
 }
 
