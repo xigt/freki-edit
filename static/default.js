@@ -138,3 +138,22 @@ function selectRow(obj) {
 function selectSuccess(result) {
     $('#editor').html(result);
 }
+
+// Log in (use directory)
+function login() {
+    var dirname = $('#dirname').val();
+    $.ajax({
+        url:baseUrl+'/dir/'+dirname,
+        dataType:'html',
+        success:loginSuccess,
+        error:loginError
+    })
+}
+
+function loginError() {
+    $('#messagefield').html('That directory appears to be invalid');
+}
+
+function loginSuccess(r) {
+    $('body').html(r);
+}

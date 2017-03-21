@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Freki Editor</title>
+    {% include 'scripts.html' with context %}
+</head>
+<body>
+    Welcome to the Freki editor. Please enter your directory ID below to begin working on a directory:
+    <br/><input id="dirname" type="text" name="directory"/> <input type="button" value="Submit" onclick="login()"/>
+    <br/><div id="messagefield"></div>
+</body>
+</html>

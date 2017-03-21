@@ -50,9 +50,12 @@ application = app
 config = {k:c.get(k) for k in c.defaults().keys()}
 config['tags'] = c.get('tags').split(',')
 
+@app.route('/')
+def home():
+    return render_template('home.html', **config)
 
 @app.route('/dir/<dir>')
-def hello_world(dir):
+def dir_list(dir):
     full_dir_path = os.path.join(freki_root, dir)
     contents = os.listdir(full_dir_path)
     saves = modified_files(dir)
