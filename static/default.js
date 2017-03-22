@@ -43,6 +43,8 @@ function toggleSpan(trObj) {
 function spanSelect(obj) {
     var trObj = $(obj).closest('tr');
     toggleSpan(trObj);
+    // Mark the file as having been modified
+    hasBeenModified = true;
 }
 
 function tagSelect(obj) {
@@ -72,6 +74,9 @@ function tagSelect(obj) {
     }
 
     toggleSpan(trObj);
+
+    // Mark the file as having been modified
+    hasBeenModified = true;
 }
 
 // This function is used to gather all the modifications
@@ -111,21 +116,20 @@ function save() {
 function saveSuccess(data) {
     alert("Saved successfully");
     selectedRow.addClass('modified');
+    hasBeenModified = false;
 }
 
 function saveError(data) {
     alert("There was an error saving the document");
 }
 
-// Functions for the browser
-function selectRow(obj) {
+function doLoad(obj) {
     if (selectedRow)
         selectedRow.removeClass("selected-row");
     selectedRow = $(obj);
     selectedRow.addClass("selected-row");
 
     var filename = $(obj).attr('filename');
-    console.log(baseUrl+'/load/'+enteredDir+filename);
 
     $.ajax({
         method:'GET',
@@ -133,6 +137,20 @@ function selectRow(obj) {
         success:selectSuccess,
         url:baseUrl+'/load/'+enteredDir+filename
     });
+}
+
+// Functions for the browser
+function selectRow(obj) {
+    if (hasBeenModified) {
+        var dontSave = confirm("This file has been modified and not saved. Would you still like to open a new file?");
+        if (dontSave) {
+            doLoad(obj);
+            hasBeenModified = false;
+        }
+    } else {
+        doLoad(obj);
+    }
+
 }
 
 function selectSuccess(result) {
