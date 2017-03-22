@@ -100,6 +100,10 @@ function gatherData() {
     return data;
 }
 
+// =============================================================================
+// FUNCTIONS FOR SAVING/"FINISHING" Documents
+// =============================================================================
+
 function save() {
     filename = selectedRow.attr('filename');
     $.ajax({
@@ -116,11 +120,36 @@ function save() {
 function saveSuccess(data) {
     alert("Saved successfully");
     selectedRow.addClass('modified');
+    selectedRow.removeClass('finished');
     hasBeenModified = false;
 }
 
 function saveError(data) {
     alert("There was an error saving the document");
+}
+
+// -------------------------------------------
+// Finish
+// -------------------------------------------
+function finish() {
+    filename = selectedRow.attr('filename');
+    $.ajax({
+        method:"POST",
+        url:baseUrl+"/finish/"+enteredDir+filename,
+        data:JSON.stringify(gatherData()),
+        contentType:'application/json',
+        success:finishSuccess,
+        error:finishError
+    })
+}
+
+function finishSuccess(r) {
+    selectedRow.addClass('finished');
+    alert("File is marked as finished!");
+}
+
+function finishError(r) {
+    alert("There was an error.");
 }
 
 function doLoad(obj) {

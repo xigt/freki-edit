@@ -68,7 +68,7 @@ def dir_list(dir):
     full_dir_path = os.path.join(freki_root, os.path.basename(dir))
     contents = os.listdir(full_dir_path)
     saves = modified_files(dir)
-    sys.stderr.write('{}\n'.format(saves))
+    # sys.stderr.write('{}\n'.format(saves))
 
     return render_template('browser.html',
                            contents=contents,
@@ -79,15 +79,16 @@ def dir_list(dir):
 @app.route('/load/<dir>/<doc_id>')
 def load_dir(dir, doc_id):
     fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
-    sys.stderr.write(c.get('base_url')+'\n')
+    # sys.stderr.write(c.get('base_url')+'\n')
     return render_template('doc.html',
                            fd=fd,
                            doc_id=doc_id,
                            **config)
 
 @app.route('/save/<dir>/<doc_id>', methods=['POST'])
-def save(dir, doc_id):
-    data = request.get_json()
+def save(dir, doc_id, data=None):
+    if data is None:
+        data = request.get_json()
 
     line_dict = data['lines']
     line_numbers = sorted([int(i) for i in line_dict.keys()])
@@ -124,6 +125,14 @@ def save(dir, doc_id):
 
     return json.jsonify({'success':True})
 
+@app.route('/finish/<dir>/<doc_id>', methods=['POST'])
+def finish(dir, doc_id):
+    data = request.get_json()
+    save(dir, doc_id, data=data)
+    flag_complete(dir, doc_id)
+    return Response(response='OK', status=200)
+
+
 # Just write that a file was saved, and the timestamp
 # so that we can log modifications.
 db_path = os.path.join(os.path.dirname(__file__), 'saves.db')
@@ -132,17 +141,28 @@ def save_to_db(dir, file):
     db.execute("""CREATE TABLE IF NOT EXISTS saves
                                         (dir TEXT,
                                         file TEXT,
-                                        modified REAL)""")
+                                        modified REAL,
+                                        complete INTEGER)""")
 
-    db.execute("""INSERT OR REPLACE INTO saves VALUES ('{}', '{}', {})""".format(dir, file, time.time()))
+    db.execute("""INSERT OR REPLACE INTO saves VALUES ('{}', '{}', {}, 0)""".format(dir, file, time.time()))
     db.commit()
-
     db.close()
+
+def flag_complete(dir, file):
+    db = sqlite3.connect(db_path)
+    c = db.execute("SELECT * FROM saves WHERE dir = '{}' AND file='{}'".format(dir, file))
+    if not (c.fetchall()):
+        db.execute("INSERT INTO saves VALUES ('{}', '{}', {}, 1)".format(dir, file, time.time()))
+    else:
+        db.execute("UPDATE saves SET complete = 1 WHERE dir = '{}' and file = '{}'".format(dir, file))
+    db.commit()
+    db.close()
+
 
 def modified_files(dir):
     if not os.path.exists(db_path):
-        return set([])
+        return {}
     else:
         db = sqlite3.connect(db_path)
         c = db.execute("""SELECT * FROM saves WHERE dir = '{}'""".format(dir))
-        return {file for dir, file, timestamp in c.fetchall()}
+        return {file:bool(complete) for dir, file, timestamp, complete in c.fetchall()}
