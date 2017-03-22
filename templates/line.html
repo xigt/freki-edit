@@ -1,6 +1,7 @@
-{%- macro line(fl, tags, fd) -%}
+{%- macro line(fl, tags, flags, fd) -%}
     {%- set cur_tag = fl.tag.split('+')[0] -%}
     {%- set mul_tags = cur_tag.split('-') %}
+    {% set cur_flags = fl.tag.split('+')[1:] %}
     {#- Deal with the class of the tag -#}
     {%- if mul_tags[0].startswith('*') -%}
         {%- set tag_class='noisy' -%}
@@ -50,6 +51,21 @@
                 {% endfor %}
             </SELECT>
         </TD>
+        {#- Flag Checkboxes -#}
+        <TD class="flagcell">
+            <DIV class="flagcell-contents" {% if tag_class == 'o' %}style="display:none"{% endif %}>
+            <DIV class="flagsshow" {% if cur_flags %}style="display:none"{% endif %}>
+                <input type="button" value="Show Flags" onclick="showFlags(this);"/>
+            </DIV>
+            <DIV class="flags" {% if not cur_flags %}style="display:none"{% endif %}>
+                {% for flag in flags %}
+                    <input type="checkbox" name="flag" value="{{ flag }}" {% if flag in cur_flags %} checked{% endif %}>{{ flag }}<br/>
+                {% endfor %}
+                <input type="button" value="Hide" onclick="hideFlags(this);"/>
+            </DIV>
+            </DIV>
+        </TD>
+        {#- Span Selection #}
         <TD>
             <SELECT class="span-select" onchange="spanSelect(this)" {% if cur_tag == 'O' %}style="display:none;"{% endif %}>
                 <OPTION value="new-span">New Span</OPTION>

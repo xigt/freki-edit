@@ -36,7 +36,7 @@ from freki.serialize import FrekiDoc, FrekiLine
 # Do other environment setup.
 # -------------------------------------------
 freki_root = c.get('freki_root')
-tags = c.get('tags').split(',')
+
 
 # =============================================================================
 # URLs
@@ -47,8 +47,16 @@ from flask import Flask
 app = Flask(__name__)
 application = app
 
+def tagsort(tag):
+    tagorder = ['L','G','T','M','O']
+    if tag in tagorder:
+        return tagorder.index(tag)
+    else:
+        return len(tagorder)
+
 config = {k:c.get(k) for k in c.defaults().keys()}
-config['tags'] = c.get('tags').split(',')
+config['tags'] = sorted(c.get('tags').split(','), key=tagsort)
+config['flags'] = sorted(c.get('flags').split(','))
 
 @app.route('/')
 def home():

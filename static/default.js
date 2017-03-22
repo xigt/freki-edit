@@ -2,7 +2,7 @@
  * Created by rgeorgi on 3/16/17.
  */
 
-function spanSelect(obj) {
+function getTr(obj) {
     $(obj).closest('tr');
 }
 
@@ -59,15 +59,18 @@ function tagSelect(obj) {
     var spanSel = trObj.find('.span-select');
     var secondaryTag = trObj.find('.secondary-tag');
     var tertiaryTag = trObj.find('.tertiary-tag');
+    var flagCell = trObj.find('.flagcell-contents');
 
     if (tagVal == 'O') {
         spanSel.hide();
         secondaryTag.hide();
         tertiaryTag.hide();
+        flagCell.hide();
         trObj.find('td').each(function() {
            $(this).removeClass('new-span');
         });
     } else {
+        flagCell.show();
         spanSel.show();
         secondaryTag.show();
         tertiaryTag.show();
@@ -214,4 +217,16 @@ function loginSuccess(r) {
     }
     // window.location.href();
     // $('body').html(r);
+}
+
+function showFlags(obj) {
+    var td = $(obj).closest('td');
+    td.find('.flagsshow').hide();
+    td.find('.flags').show();
+}
+
+function hideFlags(obj) {
+    var td = $(obj).closest('td');
+    td.find('.flags').hide();
+    td.find('.flagsshow').show();
 }
