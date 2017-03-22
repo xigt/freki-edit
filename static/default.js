@@ -6,6 +6,16 @@ function getTr(obj) {
     $(obj).closest('tr');
 }
 
+function getFlags(trObj) {
+    var checked = $(trObj).find('.flags input:checked');
+    var flagArr = [];
+    checked.each(function(idx, elt) {
+        flagArr.push($(elt).val());
+    });
+    console.log(flagArr.join('+'));
+    return flagArr;
+}
+
 function getTag(trObj) {
     var primaryTag = $(trObj).find('.tag-select').val().toLowerCase();
     var secondaryTag = $(trObj).find('.secondary-tag').val().toLowerCase();
@@ -94,10 +104,12 @@ function gatherData() {
     for (i=0;i<rows.length;i++) {
         var row = rows[i];
         var rowTag = getTag(row);
+        var rowFlags = getFlags(row);
         var lineNo = getLineNo(row);
         data['lines'][lineNo] = {'tag':rowTag};
         if (rowTag != 'o') {
             data['lines'][lineNo]['span'] = getSpan(row);
+            data['lines'][lineNo]['flags'] = rowFlags;
         }
     }
     return data;
@@ -209,7 +221,6 @@ function loginError() {
 }
 
 function loginSuccess(r) {
-    console.log(r);
     if (r['exists']) {
         window.location.assign(baseUrl+'/dir/'+r['dir']);
     } else {

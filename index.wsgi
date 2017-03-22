@@ -109,11 +109,13 @@ def save(dir, doc_id, data=None):
     for lineno in line_numbers:
         line = fd.get_line(lineno)
         old_tag = line.tag
-        flags = old_tag.split('+')[1:]
+        old_flags = old_tag.split('+')[1:]
+
+        new_flags = line_dict[str(lineno)].get('flags', [])
         new_tag = line_dict[str(lineno)]['tag'].upper()
 
         if new_tag != 'NOISY':
-            assign_tag = '+'.join([new_tag] + flags)
+            assign_tag = '+'.join([new_tag] + new_flags)
             line.tag = assign_tag
 
         if new_tag != 'O':
