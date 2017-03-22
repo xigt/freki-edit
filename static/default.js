@@ -99,7 +99,7 @@ function save() {
     filename = selectedRow.attr('filename');
     $.ajax({
         method:"POST",
-        url:baseUrl+"/save/"+dir+filename,
+        url:baseUrl+"/save/"+enteredDir+filename,
         data:JSON.stringify(gatherData()),
         contentType:'application/json',
         dataType:'json',
@@ -142,18 +142,29 @@ function selectSuccess(result) {
 // Log in (use directory)
 function login() {
     var dirname = $('#dirname').val();
-    $.ajax({
-        url:baseUrl+'/dir/'+dirname,
-        dataType:'html',
-        success:loginSuccess,
-        error:loginError
-    })
+    if (!dirname.trim()) {
+        $('#messagefield').html("Please enter an access code.")
+    } else {
+        $.ajax({
+            url: baseUrl + '/valid/' + dirname,
+            dataType: 'json',
+            success: loginSuccess,
+            error: loginError
+        });
+    }
 }
 
 function loginError() {
-    $('#messagefield').html('That directory appears to be invalid');
+    $('#messagefield').html("There appears to have been an error on the server. Please try again later.");
 }
 
 function loginSuccess(r) {
-    $('body').html(r);
+    console.log(r);
+    if (r['exists']) {
+        window.location.assign(baseUrl+'/dir/'+r['dir']);
+    } else {
+        $('#messagefield').html("That code appears to be invalid, please check the spelling and try again.")
+    }
+    // window.location.href();
+    // $('body').html(r);
 }

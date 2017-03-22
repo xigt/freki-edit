@@ -54,9 +54,18 @@ config['tags'] = c.get('tags').split(',')
 def home():
     return render_template('home.html', **config)
 
+@app.route('/valid/<dir>')
+def isvalid(dir):
+    full_dir_path = os.path.join(freki_root, os.path.basename(dir))
+    if os.path.exists(full_dir_path):
+        return json.dumps({'dir':dir, 'exists':True})
+    else:
+        return json.dumps({'dir':dir, 'exists':False})
+
+
 @app.route('/dir/<dir>')
 def dir_list(dir):
-    full_dir_path = os.path.join(freki_root, dir)
+    full_dir_path = os.path.join(freki_root, os.path.basename(dir))
     contents = os.listdir(full_dir_path)
     saves = modified_files(dir)
     sys.stderr.write('{}\n'.format(saves))
