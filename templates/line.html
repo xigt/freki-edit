@@ -73,6 +73,6 @@
             </SELECT>
         </TD>
         {#- The line content #}
-        <TD>{{ fl }}</TD>
+        <TD>{{ fl.replace(' ', '&nbsp;')|safe }}</TD>
 </TR>
 {% endmacro %}
