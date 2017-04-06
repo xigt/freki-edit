@@ -78,7 +78,7 @@ def isvalid(dir):
 @app.route('/dir/<dir>')
 def dir_list(dir):
     full_dir_path = os.path.join(freki_root, os.path.basename(dir))
-    contents = os.listdir(full_dir_path)
+    contents = sorted(os.listdir(full_dir_path), key=lambda x: int(x.split('.')[0]))
     saves = modified_files(dir)
     # sys.stderr.write('{}\n'.format(saves))
 
