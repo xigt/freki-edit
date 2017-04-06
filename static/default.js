@@ -2,8 +2,18 @@
  * Created by rgeorgi on 3/16/17.
  */
 
-function getTr(obj) {
-    $(obj).closest('tr');
+// This function is intended
+// to check all the flags in the
+// current flagcell (TD) and set the
+// "flagged" status appropriately.
+function checkFlags(obj) {
+    var tdObj = $(obj).closest('td');
+    var checked = tdObj.find(':checked');
+    if (checked.length > 0) {
+        tdObj.addClass('flagged');
+    } else {
+        tdObj.removeClass('flagged');
+    }
 }
 
 function getFlags(trObj) {
@@ -70,12 +80,14 @@ function tagSelect(obj) {
     var secondaryTag = trObj.find('.secondary-tag');
     var tertiaryTag = trObj.find('.tertiary-tag');
     var flagCell = trObj.find('.flagcell-contents');
+    var flagTD = trObj.find('.flagcell');
 
     if (tagVal == 'O') {
         spanSel.hide();
         secondaryTag.hide();
         tertiaryTag.hide();
         flagCell.hide();
+        flagTD.removeClass('flagged');
         trObj.find('td').each(function() {
            $(this).removeClass('new-span');
         });
@@ -84,6 +96,7 @@ function tagSelect(obj) {
         spanSel.show();
         secondaryTag.show();
         tertiaryTag.show();
+        checkFlags(flagTD);
     }
 
     toggleSpan(trObj);

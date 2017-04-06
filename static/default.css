@@ -51,3 +51,10 @@ tr.new-span td{
 .selected-row {
     background-color:cyan;
 }
+
+/* Whether flags have been marked or not */
+.flagcell.flagged {
+    border-bottom: 3px green solid;
+    border-left: 3px green solid;
+    border-right: 3px green solid;
+}

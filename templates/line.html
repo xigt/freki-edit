@@ -52,14 +52,15 @@
             </SELECT>
         </TD>
         {#- Flag Checkboxes -#}
-        <TD class="flagcell">
+        <TD class="flagcell {% if cur_flags %}flagged{% endif %}">
             <DIV class="flagcell-contents" {% if tag_class == 'o' %}style="display:none"{% endif %}>
-            <DIV class="flagsshow" {% if cur_flags %}style="display:none"{% endif %}>
+            <DIV class="flagsshow">
                 <input type="button" value="Show Flags" onclick="showFlags(this);"/>
             </DIV>
-            <DIV class="flags" {% if not cur_flags %}style="display:none"{% endif %}>
+            <DIV class="flags" style="display:none">
                 {% for flag in flags %}
-                    <input type="checkbox" name="flag" value="{{ flag }}" {% if flag in cur_flags %} checked{% endif %}>{{ flag }}<br/>
+                    <input type="checkbox" name="flag" onclick="checkFlags(this);"
+                           value="{{ flag }}" {% if flag in cur_flags %} checked{% endif %}>{{ flag }}<br/>
                 {% endfor %}
                 <input type="button" value="Hide" onclick="hideFlags(this);"/>
             </DIV>
