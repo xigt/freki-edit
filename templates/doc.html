@@ -12,7 +12,7 @@
 <TABLE>
     {%- for fb in fd.blocks -%}
         {% for fl in fb.lines %}
-            {{ line(fl, tags, flags, fd) }}
+            {{ line(fl, tags, flags, fd, fd_info) }}
         {% endfor -%}
 <TR class="nullrow"><TD>&nbsp;</TD></TR>
     {% endfor %}

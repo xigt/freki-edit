@@ -24,7 +24,7 @@ tr.tag-noisy{
     background-color:#f99c9c;
 }
 
-tr.new-span td{
+tr.new-span td, tr.group-start td{
     border-top:solid 10px crimson;
 }
 
@@ -46,6 +46,10 @@ tr.new-span td{
 
 .filerow.finished {
     border:2px red solid;
+}
+
+tr.in-group td:first-of-type {
+    border-left: 2px green solid;
 }
 
 .selected-row {

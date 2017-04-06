@@ -5,6 +5,10 @@ from configparser import ConfigParser
 # 1) CONFIG FILE
 # =============================================================================
 import sqlite3
+
+import re
+from string import ascii_lowercase
+
 from flask import Response
 from flask import json
 from flask.templating import render_template
@@ -84,13 +88,59 @@ def dir_list(dir):
                            saves=saves,
                            **config)
 
+# Read a frekiDoc and build a dictionary of which lines are start/stop of groups.
+
+def extract_fd_info(fd):
+    """
+    Extract info from the frekidoc to pass
+    to the rendering template, such as
+    whether a line is starting a new span
+    
+    :type fd: FrekiDoc
+    """
+    line_dict = {}
+
+    # Iterate through the
+    for lineno in fd.linemap:
+        line = fd.linemap[lineno]
+        assert isinstance(line, FrekiLine)
+        line_dict[lineno] = {'line':line}
+
+        # Is this part of the previous span?
+        prev_span_id = fd.linemap[lineno-1].span_id if lineno > 1 else None
+
+        def strip(sid): return sid.replace('-start','').replace('-stop','')
+
+        new_span = (line.span_id is not None and
+                    (prev_span_id == None or
+                    strip(line.span_id) != strip(prev_span_id)))
+
+        group_start = line.span_id.endswith('-start') if line.span_id else False
+        group_stop = line.span_id.endswith('-stop') if line.span_id else False
+
+        span_type = 'prev'
+        if new_span and not (group_start or group_stop):
+            span_type = 'new'
+        elif group_start:
+            span_type = 'group_start'
+        elif group_stop:
+            span_type = 'group_stop'
+
+
+        line_dict[lineno]['span_type'] = span_type
+
+    return line_dict
+
+
 @app.route('/load/<dir>/<doc_id>')
 def load_dir(dir, doc_id):
     fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
     # sys.stderr.write(c.get('base_url')+'\n')
+    fd_info = extract_fd_info(fd)
     return render_template('doc.html',
                            fd=fd,
                            doc_id=doc_id,
+                           fd_info=fd_info,
                            **config)
 
 @app.route('/save/<dir>/<doc_id>', methods=['POST'])
@@ -104,6 +154,7 @@ def save(dir, doc_id, data=None):
     path = os.path.join(os.path.join(freki_root, dir), doc_id)
 
     span_count = 0
+    group_count = 0
 
     fd = FrekiDoc.read(path)
     for lineno in line_numbers:
@@ -111,19 +162,51 @@ def save(dir, doc_id, data=None):
         old_tag = line.tag
         old_flags = old_tag.split('+')[1:]
 
-        new_flags = line_dict[str(lineno)].get('flags', [])
-        new_tag = line_dict[str(lineno)]['tag'].upper()
+        linedata = line_dict[str(lineno)]
+
+        new_flags = linedata.get('flags', [])
+        new_tag = linedata['tag'].upper()
+        group   = linedata.get('group')
 
         if new_tag != 'NOISY':
             assign_tag = '+'.join([new_tag] + new_flags)
             line.tag = assign_tag
 
         if new_tag != 'O':
-            if line_dict[str(lineno)].get('span') == 'new-span':
-                span_count += 1
-            line.span_id = '{}'.format(span_count)
+            new_span_type = line_dict[str(lineno)].get('span')
+
+            # Our new span will trigger a new lettering convention
+            if new_span_type == 'new-span':
+                if group:
+                    group_count += 1
+                else:
+                    span_count += 1
+
+            elif new_span_type == 'new-group':
+                group_count = 0
+
+            line.span_id = 's{}'.format(span_count)
+
+            # Add the group letter...
+            sys.stderr.write(str(group)+'\n')
+            if group:
+                line.span_id += '-{}'.format(ascii_lowercase[group_count])
+
+            if new_span_type == 'new-group':
+                line.span_id += '-start'
+            elif new_span_type == 'end-group':
+                line.span_id += '-stop'
+
         else:
             line.span_id = ''
+
+
+
+        # if group == 'start':
+        #     line.span_id += '-start'
+        # elif group == 'stop':
+        #     line.span_id += '-stop'
+
 
 
 

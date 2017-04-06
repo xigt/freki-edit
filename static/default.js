@@ -38,11 +38,41 @@ function getTag(trObj) {
 }
 
 function getSpan(trObj) {
-    return $(trObj).find('.span-select').val();
+    return (getTag(trObj) == 'o') ? null : $(trObj).find('.span-select').val();
 }
 
 function getLineNo(trObj) {
     return parseInt($(trObj).find('.lineno').attr('lineno'));
+}
+
+// Mark groups
+function highlightGroups() {
+    var lines = $('.linerow');
+
+    var inGroup = false;
+
+    // Iterate over every lines, marking in-group
+    // cells until they are closed.
+    lines.each(function(idx, obj) {
+            var o = $(obj);
+
+           if (inGroup) {
+                o.addClass('in-group');
+            } else {
+                o.removeClass('in-group');
+            }
+
+            var span = getSpan(o);
+            if (span == 'end-group') {
+                inGroup = false;
+                o.addClass('in-group');
+            } else if (span == 'new-group') {
+                inGroup = true;
+                o.addClass('in-group');
+            }
+
+        }
+    );
 }
 
 function isNewSpan(trObj) {
@@ -53,11 +83,26 @@ function toggleSpan(trObj) {
     var isO = getTag(trObj) == 'o';
     if (isO) {
         $(trObj).removeClass('new-span');
+        $(trObj).removeClass('group-start');
+        $(trObj).removeClass('group-stop');
     } else if (isNewSpan(trObj)) {
         $(trObj).addClass('new-span');
+        $(trObj).removeClass('group-stop');
+        $(trObj).removeClass('group-start');
+    } else if (getSpan(trObj) == 'new-group') {
+        $(trObj).addClass('group-start');
+        $(trObj).removeClass('group-stop');
+        $(trObj).removeClass('new-span');
+    } else if (getSpan(trObj) == 'end-group') {
+        $(trObj).removeClass('group-start');
+        $(trObj).addClass('group-stop');
+        $(trObj).removeClass('new-span');
     } else {
         $(trObj).removeClass('new-span');
+        $(trObj).removeClass('group-start');
+        $(trObj).removeClass('group-stop');
     }
+    highlightGroups();
 }
 
 function spanSelect(obj) {
@@ -121,8 +166,14 @@ function gatherData() {
         var lineNo = getLineNo(row);
         data['lines'][lineNo] = {'tag':rowTag};
         if (rowTag != 'o') {
-            data['lines'][lineNo]['span'] = getSpan(row);
-            data['lines'][lineNo]['flags'] = rowFlags;
+            var linedata = data['lines'][lineNo];
+            linedata['span'] = getSpan(row);
+            linedata['flags'] = rowFlags;
+            if ($(row).hasClass('in-group')) {
+                linedata['group'] = true;
+            } else {
+                linedata['group'] = false;
+            }
         }
     }
     return data;
