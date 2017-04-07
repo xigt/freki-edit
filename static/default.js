@@ -225,6 +225,7 @@ function finish() {
 function finishSuccess(r) {
     selectedRow.addClass('finished');
     alert("File is marked as finished!");
+    hasBeenModified = true;
 }
 
 function finishError(r) {
