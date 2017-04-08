@@ -120,7 +120,7 @@ def get_fd_info(fd):
         span_type = 'prev'
         if new_span and not span_cont:
             span_type = 'new'
-        elif span_cont:
+        elif new_span and span_cont:
             span_type = 'cont'
 
         line_dict[lineno]['span_type'] = span_type
