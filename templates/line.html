@@ -1,4 +1,4 @@
-{%- macro line(fl, tags, flags, fd) -%}
+{%- macro line(fl, tags, flags, fd, fd_info) -%}
     {%- set cur_tag = fl.tag.split('+')[0] -%}
     {%- set mul_tags = cur_tag.split('-') %}
     {% set cur_flags = fl.tag.split('+')[1:] %}
@@ -9,13 +9,9 @@
         {%- set tag_class=mul_tags[0].lower() -%}
     {%- endif -%}
     {#- The drop-down for new_span, prev_span -#}
-    {%- if fl.lineno > 1 -%}
-        {%- set same_span=fd.linemap[fl.lineno-1].span_id == fl.span_id -%}
-    {%- else -%}
-        {%- set same_span=false -%}
-    {%- endif -%}
+    {% set span_type = fd_info[fl.lineno]['span_type'] %}
     {#-  -#}
-<TR class="linerow tag-{{ tag_class }}{% if fl.span_id and not same_span %} new-span{% endif %}">
+<TR class="linerow tag-{{ tag_class }}{% if span_type == 'new' %} new-span{% endif %}{% if span_type == 'cont' %} cont-span{% endif %}">
         <TD class="lineno" lineno="{{ fl.lineno }}">{{ fl.lineno }}</TD>
         {#  -#}
         {# The drop-down for the tag... -#}
@@ -69,8 +65,9 @@
         {#- Span Selection #}
         <TD>
             <SELECT class="span-select" onchange="spanSelect(this)" {% if cur_tag == 'O' %}style="display:none;"{% endif %}>
-                <OPTION value="new-span">New Span</OPTION>
-                <OPTION value="prev-span" {% if same_span %}selected="true"{% endif %}>...</OPTION>
+                <OPTION value="new-span"{% if span_type == 'new' %} selected="true"{% endif %}>New Span</OPTION>
+                <OPTION value="prev-span"{% if span_type == 'prev' %} selected="true"{% endif %}>...</OPTION>
+                <OPTION value="cont-span"{% if span_type == 'cont' %} selected="true"{% endif %}>Continue Span</OPTION>
             </SELECT>
         </TD>
         {#- The line content #}

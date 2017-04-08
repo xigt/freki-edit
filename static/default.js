@@ -45,18 +45,21 @@ function getLineNo(trObj) {
     return parseInt($(trObj).find('.lineno').attr('lineno'));
 }
 
-function isNewSpan(trObj) {
-    return getSpan(trObj) == 'new-span';
-}
 
 function toggleSpan(trObj) {
     var isO = getTag(trObj) == 'o';
     if (isO) {
         $(trObj).removeClass('new-span');
-    } else if (isNewSpan(trObj)) {
+        $(trObj).removeClass('cont-span');
+    } else if (getSpan(trObj) == 'new-span') {
         $(trObj).addClass('new-span');
+        $(trObj).removeClass('cont-span');
+    } else if (getSpan(trObj) == 'cont-span') {
+        $(trObj).removeClass('new-span');
+        $(trObj).addClass('cont-span');
     } else {
         $(trObj).removeClass('new-span');
+        $(trObj).removeClass('cont-span');
     }
 }
 

@@ -1,4 +1,5 @@
 import os, sys, time
+import string
 from configparser import ConfigParser
 
 # =============================================================================
@@ -84,26 +85,127 @@ def dir_list(dir):
                            saves=saves,
                            **config)
 
+def get_fd_info(fd):
+    """
+    Return a dict of span types for each line: prev, new, or cont(inuing)
+    
+    :type fd: FrekiDoc 
+    :rtype: dict
+    """
+    line_dict = {}
+
+    for lineno in fd.linemap:
+        line = fd.linemap[lineno]
+        line_dict[lineno] = {'line':line}
+        assert isinstance(line, FrekiLine)
+
+        prev_span_id = fd.linemap[lineno-1].span_id if lineno > 1 else None
+
+        span_parts = line.span_id.split('-') if line.span_id else 0
+
+        # It's a "new span" if transitioning from
+        # no span_id or if the previous line's span_id
+        # doesn't match this one.
+        new_span = (line.span_id is not None and
+                    (prev_span_id == None or
+                    line.span_id != prev_span_id))
+
+        # It's a "continuing" span if this span_id
+        # has a letter suffix that's not "a"
+        span_cont = (line.span_id is not None and
+                     len(span_parts) > 1 and
+                     span_parts[1] in string.ascii_lowercase and
+                     span_parts[1] != 'a')
+
+        span_type = 'prev'
+        if new_span and not span_cont:
+            span_type = 'new'
+        elif span_cont:
+            span_type = 'cont'
+
+        line_dict[lineno]['span_type'] = span_type
+    return line_dict
+
+
 @app.route('/load/<dir>/<doc_id>')
 def load_dir(dir, doc_id):
     fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
+    fd_info = get_fd_info(fd)
     # sys.stderr.write(c.get('base_url')+'\n')
     return render_template('doc.html',
                            fd=fd,
                            doc_id=doc_id,
+                           fd_info=fd_info,
                            **config)
+
+def assign_spans(line_data):
+    """
+    From the dict of line data, 
+    create a span_id for each line.
+    """
+    span_dict = {}
+
+    line_numbers = sorted([int(i) for i in line_data.keys()])
+    span_count = 0
+
+    def get_span_type(lineno): return line_data[str(lineno)].get('span')
+    def name_lettered_span(span_num, num_prev_spans): return 's{}-{}'.format(span_num, string.ascii_lowercase[num_prev_spans])
+
+    cur_span = None
+
+    for lineno in line_numbers:
+        span_type = get_span_type(lineno)
+
+        if span_type == 'new-span':
+            span_count += 1
+            cur_span = 's{}'.format(span_count)
+            span_dict[lineno] = cur_span
+        elif span_type == 'cont-span':
+            # If the current span is "continuing,"
+            # walk backward until a "new" span is
+            # seen. This will make this span
+            # n+1
+            num_prev_spans = 0
+            prev_line_counter = lineno-1
+            while prev_line_counter > 0:
+                prev_span_type = get_span_type(prev_line_counter)
+                if prev_span_type == 'new-span':
+                    num_prev_spans += 1
+                    span_dict[prev_line_counter] = name_lettered_span(span_count, 0)
+                    break
+                elif prev_span_type == 'cont-span':
+                    num_prev_spans += 1
+
+                prev_line_counter -=1
+
+            span_dict[lineno] = name_lettered_span(span_count, num_prev_spans)
+
+    # One more pass for the "prev_spans"
+    cur_span = None
+    for lineno in line_numbers:
+        span_type = get_span_type(lineno)
+        if span_type in ['new-span', 'cont-span']:
+            cur_span = span_dict[lineno]
+        elif span_type == 'prev-span':
+            span_dict[lineno] = cur_span
+
+    return span_dict
 
 @app.route('/save/<dir>/<doc_id>', methods=['POST'])
 def save(dir, doc_id, data=None):
+    """
+    Save the data from the editor to file.
+    """
     if data is None:
         data = request.get_json()
 
     line_dict = data['lines']
+
     line_numbers = sorted([int(i) for i in line_dict.keys()])
+    span_ids = assign_spans(line_dict)
+    sys.stderr.write(str(span_ids)+'\n')
 
     path = os.path.join(os.path.join(freki_root, dir), doc_id)
-
-    span_count = 0
 
     fd = FrekiDoc.read(path)
     for lineno in line_numbers:
@@ -114,20 +216,15 @@ def save(dir, doc_id, data=None):
         new_flags = line_dict[str(lineno)].get('flags', [])
         new_tag = line_dict[str(lineno)]['tag'].upper()
 
-        if new_tag != 'NOISY':
+        if new_tag == 'O':
+            line.tag = None
+        elif new_tag != 'NOISY':
             assign_tag = '+'.join([new_tag] + new_flags)
             line.tag = assign_tag
 
-        if new_tag != 'O':
-            if line_dict[str(lineno)].get('span') == 'new-span':
-                span_count += 1
-            line.span_id = '{}'.format(span_count)
-        else:
-            line.span_id = ''
+        line.span_id = span_ids.get(lineno)
 
 
-
-        # sys.stderr.write('{} {}\n'.format(line.tag, assign_tag))
 
     with open(path, 'w') as f:
         f.write(str(fd))

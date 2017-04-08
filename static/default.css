@@ -28,6 +28,10 @@ tr.new-span td{
     border-top:solid 10px crimson;
 }
 
+tr.cont-span td{
+    border-top:solid 10px blueviolet;
+}
+
 #save {
     position:fixed;
     top:10px;
