@@ -20,6 +20,10 @@ tr.tag-v{
     background-color:lightgreen;
 }
 
+tr.tag-tb {
+    background-color:#FFB14B;
+}
+
 tr.tag-noisy{
     background-color:#f99c9c;
 }
