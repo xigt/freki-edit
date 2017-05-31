@@ -79,6 +79,7 @@ function tagSelect(obj) {
         tag = tags[i];
         trObj.removeClass(tag);
     }
+    trObj.removeClass('tag-noisy');
 
     var newClass = 'tag-' + tagVal.toLowerCase();
     trObj.addClass(newClass);
