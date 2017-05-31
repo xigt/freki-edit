@@ -73,7 +73,13 @@ function spanSelect(obj) {
 function tagSelect(obj) {
     var tagVal = $(obj).val();
     var trObj = $(obj).closest('tr');
-    trObj.removeClass('tag-noisy tag-g tag-l tag-t tag-m tag-o tag-v');
+
+    // remove classes not being used.
+    for (i=0;i<tags.length;i++) {
+        tag = tags[i];
+        trObj.removeClass(tag);
+    }
+
     var newClass = 'tag-' + tagVal.toLowerCase();
     trObj.addClass(newClass);
 
