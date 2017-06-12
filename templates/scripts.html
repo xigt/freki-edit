@@ -1,9 +1,9 @@
     <meta charset="UTF-8">
     {#- Start off with the script imports... #}
-    <script type="text/javascript" src="{{ static_url }}/jquery.min.js"></script>
-    <script type="text/javascript" src="{{ static_url }}/default.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='default.js') }}"></script>
     {# And the stylesheet.. -#}
-    <link rel="stylesheet" type="text/css" href="{{ static_url }}/default.css"/>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='default.css') }}"/>
 
     <!-- Snippets of javascript for later -->
     <script type="text/javascript">
