@@ -191,14 +191,7 @@ function finishError(r) {
     alert("There was an error.");
 }
 
-function doLoad(obj) {
-    if (selectedRow)
-        selectedRow.removeClass("selected-row");
-    selectedRow = $(obj);
-    selectedRow.addClass("selected-row");
-
-    var filename = $(obj).attr('filename');
-
+function doLoad(filename) {
     $.ajax({
         method:'GET',
         contentType:'html',
@@ -208,21 +201,22 @@ function doLoad(obj) {
 }
 
 // Functions for the browser
-function selectRow(obj) {
+function selectRow(filename) {
     if (hasBeenModified) {
         var dontSave = confirm("This file has been modified and not saved. Would you still like to open a new file?");
         if (dontSave) {
-            doLoad(obj);
+            doLoad(filename);
             hasBeenModified = false;
         }
     } else {
-        doLoad(obj);
+        doLoad(filename);
     }
 
 }
 
 function selectSuccess(result) {
     $('#editor').html(result);
+    $('#editor').scrollTop();
 }
 
 // Log in (use directory)
@@ -265,3 +259,37 @@ function hideFlags(obj) {
     td.find('.flags').hide();
     td.find('.flagsshow').show();
 }
+
+// Bind click action to filelist
+function bindFilelist() {
+    $('#filelist').datalist({
+        onSelect: function (idx, row) {
+                        selectRow(row['value']);
+                        },
+        rowStyler: function(idx, row) {
+            if (row['value']) {
+                if (saves[row['value']] === true) {
+                    return 'color:red';
+                }  else if (saves[row['value']] === false) {
+                    return 'color:pink';
+                }
+            }
+        }
+    });
+}
+
+//
+function doResize() {
+    var mw = $('#mainwindow');
+    var newHeight = $(document).height();
+    mw.layout('resize', {height:newHeight-35});
+}
+
+$(window).resize(function() {
+    doResize();
+});
+
+$(document).ready(function (){
+    // doResize();
+    bindFilelist();
+});

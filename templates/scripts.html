@@ -2,9 +2,10 @@
     {#- Start off with the script imports... #}
     <script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='default.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='easy_ui/jquery.easyui.min.js') }}"></script>
     {# And the stylesheet.. -#}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='default.css') }}"/>
-
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='easy_ui/themes/default/easyui.css') }}"/>
     <!-- Snippets of javascript for later -->
     <script type="text/javascript">
         var selectedRow=null;
@@ -14,4 +15,7 @@
         var tags = [{% for tag in tags %}
             'tag-{{ tag|lower }}',
         {%- endfor %}];
+        var saves = { {% for save in saves -%}
+                    '{{ save }}':{{ 'true' if saves[save] else 'false' }},
+                    {%- endfor %}};
     </script>

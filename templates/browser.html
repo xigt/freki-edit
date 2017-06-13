@@ -8,14 +8,26 @@
 
 </head>
 <body>
-
-    <div id="mainwindow" style="height: 100vh; position:relative">
-        <div id="filelist" style="width:20%; float:left; max-height:95vh; overflow:scroll">
-            {%- for path in contents %}
-                <div class="filerow{% if path in saves %} modified{% endif %}{% if path in saves and saves[path] %} finished{% endif %}" filename="{{ path }}" onclick="selectRow(this)">{{ path }}</div>
-             {%- endfor %}
+    <div id="mainwindow" class="easyui-layout easyui-resizable" style="height:800px">
+{#        <div data-options="region:'west'" id="filelist" style="width:20%; float:left; max-height:95vh; height:95vh; overflow:scroll">#}
+        <div id="controls" data-options="region:'north',split:true" style="height:40px; text-align:right">
+            Save Blah
         </div>
-        <div id="editor" style="width:79%; float:left; max-height:97vh; overflow: scroll">
+        <div data-options="region:'west',split:true" style="width:20%;height:100%">
+            <div>
+            <ul id="filelist" class="easyui-datalist" lines="true"">
+
+                {%- for path in contents %}
+                    <li id="filerow-{{ loop.index - 1 }}" class="filerow{% if path in saves %} modified{% endif %}{% if path in saves and saves[path] %} finished{% endif %}" filename="{{ path }}"
+                    >{{ path }}</li>
+                {%- endfor %}
+            </ul>
+            </div>
+        </div>
+
+        <div id="editor"
+                style="width:400px;height:100%; overflow:scroll"
+            data-options="region:'center'">
             No file loaded.
         </div>
     </div>
