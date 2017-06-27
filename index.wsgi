@@ -255,7 +255,14 @@ def save_to_db(dir, file):
     db.commit()
     db.close()
 
+
 def flag_complete(dir, file):
+    """    
+    Flag this file as "complete" in the database. 
+    
+    :param dir: The directory that the file is contained in 
+    :param file: The filename    
+    """
     db = sqlite3.connect(db_path)
     c = db.execute("SELECT * FROM saves WHERE dir = '{}' AND file='{}'".format(dir, file))
     if not (c.fetchall()):
