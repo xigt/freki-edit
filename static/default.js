@@ -216,7 +216,20 @@ function selectRow(filename) {
 
 function selectSuccess(result) {
     $('#editor').html(result);
-    $('#editor').scrollTop();
+    $('#editor').scrollTop(0);
+    bindCombos();
+}
+
+// Bind the flag fields to easyui combo elements
+function bindCombos() {
+    $('.flags').each(function(idx, elt) {
+        $(elt).combo({
+            multiple:true,
+            checkbox: true,
+            editable:false,
+            panelHeight: 'auto'});
+    });
+
 }
 
 // Log in (use directory)
