@@ -125,6 +125,18 @@ def get_span_type(fd, lineno):
     return span_type
 
 
+def is_new_block(fd, lineno):
+    """
+    :type fd: FrekiDoc
+    :type lineno: int
+    """
+    if lineno == 1:
+        return False
+    else:
+        line = fd.linemap[lineno]
+        prev_line = fd.linemap[lineno-1]
+        return line.block.block_id != prev_line.block.block_id
+
 def frekidoc_to_json(fd):
     """
     Return a dict of span types for each line: prev, new, or cont(inuing)
@@ -133,18 +145,32 @@ def frekidoc_to_json(fd):
     :rtype: dict
     """
 
-    line_dict = {}
+    lines = []
 
     for lineno in fd.linemap:
         line = fd.linemap[lineno]          # Get the current FrekiLine
-        line_dict[lineno] = {'line':line}
         assert isinstance(line, FrekiLine)
 
+        lang_name = line.attrs.get('lang_name')
+        lang_code = line.attrs.get('lang_code')
 
 
+        cur_line_dict = {'text':str(line),
+                         'tag':line.tag,
+                         'lineno':line.lineno}
 
-        line_dict[lineno]['span_type'] = get_span_type(fd, lineno)
-    return line_dict
+        if line.tag != 'O':
+            cur_line_dict['span_type'] = get_span_type(fd, lineno)
+        if lang_name is not None:
+            cur_line_dict['lang_name'] = lang_name
+        if lang_code is not None:
+            cur_line_dict['lang_code'] = lang_name
+        if is_new_block(fd, lineno):
+            cur_line_dict['new_block'] = True
+
+        lines.append(cur_line_dict)
+
+    return lines
 
 
 
@@ -153,11 +179,10 @@ def frekidoc_to_json(fd):
 def load_dir(dir, doc_id):
     fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
     fd_info = frekidoc_to_json(fd)
-    # sys.stderr.write(c.get('base_url')+'\n')
+
     return render_template('doc.html',
-                           fd=fd,
+                           lines=fd_info,
                            doc_id=doc_id,
-                           fd_info=fd_info,
                            **config)
 
 def load_fd_lines(dir, doc_id, line_start=0, num_lines=100):

@@ -1,7 +1,7 @@
-{%- macro line(fl, tags, flags, fd, fd_info) -%}
-    {%- set cur_tag = fl.tag.split('+')[0] -%}
+{%- macro line(l) -%}
+    {%- set cur_tag = l['tag'].split('+')[0] -%}
     {%- set mul_tags = cur_tag.split('-') %}
-    {% set cur_flags = fl.tag.split('+')[1:] %}
+    {% set cur_flags = l['tag'].split('+')[1:] %}
     {#- Deal with the class of the tag -#}
     {%- if mul_tags[0].startswith('*') -%}
         {%- set tag_class='noisy' -%}
@@ -9,10 +9,10 @@
         {%- set tag_class=mul_tags[0].lower() -%}
     {%- endif -%}
     {#- The drop-down for new_span, prev_span -#}
-    {% set span_type = fd_info[fl.lineno]['span_type'] %}
+    {% set span_type = l.get('span_type') %}
     {#-  -#}
 <TR class="linerow tag-{{ tag_class }}{% if span_type == 'new' %} new-span{% endif %}{% if span_type == 'cont' %} cont-span{% endif %}">
-        <TD class="lineno" lineno="{{ fl.lineno }}">{{ fl.lineno }}</TD>
+        <TD class="lineno" lineno="{{ l['lineno'] }}">{{ l['lineno'] }}</TD>
         {#  -#}
         {# The drop-down for the tag... -#}
         <TD>
@@ -71,6 +71,6 @@
             </SELECT>
         </TD>
         {#- The line content #}
-        <TD>{{ fl.replace(' ', '&nbsp;')|safe }}</TD>
+        <TD>{{ l['text'].replace(' ', '&nbsp;')|safe }}</TD>
 </TR>
 {% endmacro %}
