@@ -1,7 +1,7 @@
-{%- macro line(fl, tags, flags, fd, fd_info) -%}
-    {%- set cur_tag = fl.tag.split('+')[0] -%}
+{%- macro line(l, tags, flags) -%}
+    {%- set cur_tag = l['tag'].split('+')[0] -%}
     {%- set mul_tags = cur_tag.split('-') %}
-    {% set cur_flags = fl.tag.split('+')[1:] %}
+    {% set cur_flags = l['tag'].split('+')[1:] %}
     {#- Deal with the class of the tag -#}
     {%- if mul_tags[0].startswith('*') -%}
         {%- set tag_class='noisy' -%}
@@ -9,10 +9,10 @@
         {%- set tag_class=mul_tags[0].lower() -%}
     {%- endif -%}
     {#- The drop-down for new_span, prev_span -#}
-    {% set span_type = fd_info[fl.lineno]['span_type'] %}
+    {% set span_type = l.get('span_type') %}
     {#-  -#}
 <TR class="linerow tag-{{ tag_class }}{% if span_type == 'new' %} new-span{% endif %}{% if span_type == 'cont' %} cont-span{% endif %}">
-        <TD class="lineno" lineno="{{ fl.lineno }}">{{ fl.lineno }}</TD>
+        <TD class="lineno" lineno="{{ l['lineno'] }}">{{ l['lineno'] }}</TD>
         {#  -#}
         {# The drop-down for the tag... -#}
         <TD>
@@ -48,17 +48,14 @@
             </SELECT>
         </TD>
         {#- Flag Checkboxes -#}
-        <TD class="flagcell {% if cur_flags %}flagged{% endif %}">
+        <TD class="flagcell">
             <DIV class="flagcell-contents" {% if tag_class == 'o' %}style="display:none"{% endif %}>
-            <DIV class="flagsshow">
-                <input type="button" value="Show Flags" onclick="showFlags(this);"/>
-            </DIV>
-            <DIV class="flags" style="display:none">
+            <DIV class="flag-combo"></DIV>
+            <DIV class="flags">
                 {% for flag in flags %}
                     <input type="checkbox" name="flag" onclick="checkFlags(this);"
                            value="{{ flag }}" {% if flag in cur_flags %} checked{% endif %}>{{ flag }}<br/>
                 {% endfor %}
-                <input type="button" value="Hide" onclick="hideFlags(this);"/>
             </DIV>
             </DIV>
         </TD>
@@ -71,6 +68,6 @@
             </SELECT>
         </TD>
         {#- The line content #}
-        <TD>{{ fl.replace(' ', '&nbsp;')|safe }}</TD>
+        <TD>{{ l['text'].replace(' ', '&nbsp;')|safe }}</TD>
 </TR>
 {% endmacro %}

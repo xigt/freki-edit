@@ -85,58 +85,124 @@ def dir_list(dir):
                            saves=saves,
                            **config)
 
-def get_fd_info(fd):
+def get_span_type(fd, lineno):
+    """
+    :type fd: FrekiDoc
+    :type lineno: int
+    """
+    # -------------------------------------------
+    # Determine whether the current span is new
+    # or continuing
+    # -------------------------------------------
+    line = fd.linemap[lineno]
+    assert isinstance(line, FrekiLine)
+
+    prev_span_id = fd.linemap[lineno - 1].span_id if lineno > 1 else None
+
+    span_parts = line.span_id.split('-') if line.span_id else 0
+
+    # It's a "new span" if transitioning from
+    # no span_id or if the previous line's span_id
+    # doesn't match this one.
+    new_span = (line.span_id is not None and
+                (prev_span_id == None or
+                 line.span_id != prev_span_id))
+
+    # It's a "continuing" span if this span_id
+    # has a letter suffix that's not "a"
+    span_cont = (line.span_id is not None and
+                 len(span_parts) > 1 and
+                 span_parts[1] in string.ascii_lowercase and
+                 span_parts[1] != 'a')
+
+    span_type = 'prev'
+    if new_span and not span_cont:
+        span_type = 'new'
+    elif new_span and span_cont:
+        span_type = 'cont'
+
+    # -------------------------------------------
+    return span_type
+
+
+def is_new_block(fd, lineno):
+    """
+    :type fd: FrekiDoc
+    :type lineno: int
+    """
+    if lineno == 1:
+        return False
+    else:
+        line = fd.linemap[lineno]
+        prev_line = fd.linemap[lineno-1]
+        return line.block.block_id != prev_line.block.block_id
+
+def frekidoc_to_json(fd, start_line=1, num_lines=None):
     """
     Return a dict of span types for each line: prev, new, or cont(inuing)
     
     :type fd: FrekiDoc 
     :rtype: dict
     """
-    line_dict = {}
 
-    for lineno in fd.linemap:
-        line = fd.linemap[lineno]
-        line_dict[lineno] = {'line':line}
+    # By default, scroll all lines!
+    if num_lines is None:
+        num_lines = max(fd.linemap.keys())
+
+    lines = []
+
+    for lineno in range(start_line, start_line+num_lines):
+        if lineno not in fd.linemap:
+            break
+
+        line = fd.linemap[lineno]          # Get the current FrekiLine
         assert isinstance(line, FrekiLine)
 
-        prev_span_id = fd.linemap[lineno-1].span_id if lineno > 1 else None
-
-        span_parts = line.span_id.split('-') if line.span_id else 0
-
-        # It's a "new span" if transitioning from
-        # no span_id or if the previous line's span_id
-        # doesn't match this one.
-        new_span = (line.span_id is not None and
-                    (prev_span_id == None or
-                    line.span_id != prev_span_id))
-
-        # It's a "continuing" span if this span_id
-        # has a letter suffix that's not "a"
-        span_cont = (line.span_id is not None and
-                     len(span_parts) > 1 and
-                     span_parts[1] in string.ascii_lowercase and
-                     span_parts[1] != 'a')
-
-        span_type = 'prev'
-        if new_span and not span_cont:
-            span_type = 'new'
-        elif new_span and span_cont:
-            span_type = 'cont'
-
-        line_dict[lineno]['span_type'] = span_type
-    return line_dict
+        lang_name = line.attrs.get('lang_name')
+        lang_code = line.attrs.get('lang_code')
 
 
-@app.route('/load/<dir>/<doc_id>')
+        cur_line_dict = {'text':str(line),
+                         'tag':line.tag,
+                         'lineno':line.lineno}
+
+        if line.tag != 'O':
+            cur_line_dict['span_type'] = get_span_type(fd, lineno)
+        if lang_name is not None:
+            cur_line_dict['lang_name'] = lang_name
+        if lang_code is not None:
+            cur_line_dict['lang_code'] = lang_name
+        if is_new_block(fd, lineno):
+            cur_line_dict['new_block'] = True
+
+        lines.append(cur_line_dict)
+
+    return lines
+
+
+
+
+@app.route('/load/<dir>/<doc_id>', methods=['GET'])
 def load_dir(dir, doc_id):
+
+    # Get the line start:
+    start_line = request.args.get('start', 1)
+    num_lines = request.args.get('range', 100)
+
     fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
-    fd_info = get_fd_info(fd)
-    # sys.stderr.write(c.get('base_url')+'\n')
+    fd_info = frekidoc_to_json(fd, start_line=start_line, num_lines=num_lines)
+
+
+
     return render_template('doc.html',
-                           fd=fd,
+                           lines=fd_info,
                            doc_id=doc_id,
-                           fd_info=fd_info,
                            **config)
+
+def load_fd_lines(dir, doc_id, line_start=0, num_lines=100):
+    fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
+
+
 
 def assign_spans(line_data):
     """

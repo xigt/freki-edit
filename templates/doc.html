@@ -10,11 +10,11 @@
 <body>
 {%- from 'line.html' import line %}
 <TABLE>
-    {%- for fb in fd.blocks -%}
-        {% for fl in fb.lines %}
-            {{ line(fl, tags, flags, fd, fd_info) }}
-        {% endfor -%}
-<TR class="nullrow"><TD>&nbsp;</TD></TR>
+    {% for l in lines %}
+        {{ line(l, tags, flags) }}
+        {% if l['new_block'] %}
+            <TR class="nullrow"><TD>&nbsp;</TD></TR>
+        {% endif %}
     {% endfor %}
 </TABLE>
 
