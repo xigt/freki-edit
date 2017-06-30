@@ -191,13 +191,20 @@ function finishError(r) {
     alert("There was an error.");
 }
 
-function doLoad(filename) {
+function getNumLines() {return parseInt($('#numlines').val());}
+
+function doLoad(filename, startLine) {
+    if (startLine === undefined)
+        startLine = 1;
+
     $.ajax({
         method:'GET',
-        contentType:'html',
-        success:selectSuccess,
+        dataType:'json',
+        data:{start:startLine, range:getNumLines()},
+        success:loadSuccess,
         url:baseUrl+'/load/'+enteredDir+filename
     });
+
 }
 
 // Functions for the browser
@@ -214,10 +221,46 @@ function selectRow(filename) {
 
 }
 
-function selectSuccess(result) {
-    $('#editor').html(result);
+function loadSuccess(result) {
+    var htmlResult = result['html'];
+    var startLine = result['start_line'];
+    var endLine = result['end_line'];
+    var maxLine = result['max_line'];
+
+    $('#editor').html(htmlResult);
     $('#editor').scrollTop(0);
+
+    $('#range').show();
+    $('#start_line').text(startLine);
+    $('#stop_line').text(endLine);
+    $('#max_lines').text(maxLine);
+
+    // Disable previous when on fist line:
+    if (startLine == 1)
+        $('#prev').prop('disabled', true);
+    else
+        $('#prev').prop('disabled', false);
+
+    localStorage.setItem('startLine', startLine);
+    localStorage.setItem('lastLine', endLine);
+    localStorage.setItem('docId', result['doc_id']);
+    localStorage.setItem('maxLine', maxLine);
+
     bindCombos();
+}
+
+
+function loadNext() {
+    var lastLine = localStorage.getItem('lastLine');
+
+
+    doLoad(localStorage.getItem('docId'), localStorage.getItem('lastLine'));
+}
+
+function loadPrev() {
+    var startLine = Math.max(1, localStorage.getItem('startLine')-getNumLines());
+
+    doLoad(localStorage.getItem('docId'), startLine);
 }
 
 // Bind the flag fields to easyui combo elements

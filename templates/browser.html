@@ -15,9 +15,15 @@
 
             {#-  Show Pagination Controls -#}
             <div id="pagination">
-                <span id="range">Showing Lines <span id="start_line"></span> to <span id="stop_line"></span></span>
-                <button>Prev</button>
-                <button>Next</button>
+                <div id="linerange">
+                    Show <input type="text" value="100" id="numlines" style="width:40px"/> lines at a time.
+                </div><BR/>
+
+                <span id="range" style="display:none">Showing Lines <span id="start_line"></span> to <span id="stop_line"></span> of <span id="max_lines"></span>
+                    <button id="prev" onclick="loadPrev()">Prev</button>
+                    <button id="next" onclick="loadNext()">Next</button>
+                </span>
+
             </div>
 
         </div>

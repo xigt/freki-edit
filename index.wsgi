@@ -186,21 +186,30 @@ def frekidoc_to_json(fd, start_line=1, num_lines=None):
 def load_dir(dir, doc_id):
 
     # Get the line start:
-    start_line = request.args.get('start', 1)
-    num_lines = request.args.get('range', 100)
+    start_line = int(request.args.get('start', 1))
+    num_lines = int(request.args.get('range', 100))
 
     fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
+
+    # Get what would be the last line:
+    if len(fd) < start_line + num_lines:
+        num_lines = len(fd) - start_line
+
+
     fd_info = frekidoc_to_json(fd, start_line=start_line, num_lines=num_lines)
 
 
 
-    return render_template('doc.html',
+    html = render_template('doc.html',
                            lines=fd_info,
                            doc_id=doc_id,
                            **config)
 
-def load_fd_lines(dir, doc_id, line_start=0, num_lines=100):
-    fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
+    return json.dumps({'html':html,
+                       'start_line':start_line,
+                       'end_line':start_line + num_lines,
+                       'max_line':len(fd)-1,
+                       'doc_id':doc_id})
 
 
 
