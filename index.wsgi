@@ -137,7 +137,7 @@ def is_new_block(fd, lineno):
         prev_line = fd.linemap[lineno-1]
         return line.block.block_id != prev_line.block.block_id
 
-def frekidoc_to_json(fd):
+def frekidoc_to_json(fd, start_line=1, num_lines=None):
     """
     Return a dict of span types for each line: prev, new, or cont(inuing)
     
@@ -145,9 +145,16 @@ def frekidoc_to_json(fd):
     :rtype: dict
     """
 
+    # By default, scroll all lines!
+    if num_lines is None:
+        num_lines = max(fd.linemap.keys())
+
     lines = []
 
-    for lineno in fd.linemap:
+    for lineno in range(start_line, start_line+num_lines):
+        if lineno not in fd.linemap:
+            break
+
         line = fd.linemap[lineno]          # Get the current FrekiLine
         assert isinstance(line, FrekiLine)
 
