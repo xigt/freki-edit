@@ -222,14 +222,42 @@ function selectSuccess(result) {
 
 // Bind the flag fields to easyui combo elements
 function bindCombos() {
-    $('.flags').each(function(idx, elt) {
-        $(elt).combo({
+    $('.flagcell').each(function(idx, elt) {
+        var flagCombo = $(elt).find('.flag-combo');
+
+        flagCombo.combo({
             multiple:true,
             checkbox: true,
             editable:false,
-            panelHeight: 'auto'});
+            panelHeight: 'auto'
+        });
+
+        var flags = $(elt).find('.flags');
+        var panel = flagCombo.combo('panel');
+
+        panel.append(flags);
+
+        // Now, each time a checkbox is clicked, update the flags.
+        flags.find('input').each(function (i, elt) {
+            $(elt).click(function() {
+                updateCombo(flagCombo, flags);
+            });
+        });
+
+        updateCombo(flagCombo, flags);
     });
 
+}
+
+function updateCombo(comboElt, flags) {
+    var flagArr = [];
+    $(flags).find('input').each(function(i, flagElt) {
+        var v = $(flagElt).val();
+        if ($(flagElt).is(':checked')) {
+            flagArr.push(v);
+        }
+    });
+    $(comboElt).combo('setText', flagArr.join('+'));
 }
 
 // Log in (use directory)

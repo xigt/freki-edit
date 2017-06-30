@@ -12,6 +12,14 @@
 {#        <div data-options="region:'west'" id="filelist" style="width:20%; float:left; max-height:95vh; height:95vh; overflow:scroll">#}
         <div id="controls" data-options="region:'north',split:true" style="height:40px; text-align:right">
             Save Blah
+
+            {#-  Show Pagination Controls -#}
+            <div id="pagination">
+                <span id="range">Showing Lines <span id="start_line"></span> to <span id="stop_line"></span></span>
+                <button>Prev</button>
+                <button>Next</button>
+            </div>
+
         </div>
         <div data-options="region:'west',split:true" style="width:20%;height:100%">
             <div>
