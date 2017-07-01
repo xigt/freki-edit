@@ -10,23 +10,29 @@
 <body>
     <div id="mainwindow" class="easyui-layout easyui-resizable" style="height:800px">
 {#        <div data-options="region:'west'" id="filelist" style="width:20%; float:left; max-height:95vh; height:95vh; overflow:scroll">#}
-        <div id="controls" data-options="region:'north',split:true" style="height:40px; text-align:right">
+        <div id="controls" data-options="region:'north',split:true" style="height:40px; text-align:center">
 
             {#-  Show Pagination Controls -#}
-            <div id="pagination" style="display:inline-block">
-                <div id="linerange" style="position:absolute;left:10px;top:10px">
-                    Show <input type="text" value="100" id="numlines" style="width:40px"/> lines at a time.
+            <div id="pagination">
+                <div id="linerange">
+                    Show <input type="text" value="100" id="numlines"/> lines at a time.
                 </div>
 
-                <span id="range" style="display:none">Showing Lines <span id="start_line"></span> to <span id="stop_line"></span> of <span id="max_lines"></span>
+                <span class="range" id="range-placeholder">No document displayed.</span>
+                <span class="range" id="range">Showing Lines <span id="start_line"></span> to <span id="stop_line"></span> of <span id="max_lines"></span>
                     <button id="prev" onclick="loadPrev()">Prev</button>
                     <button id="next" onclick="loadNext()">Next</button>
+
+                    Jump to line <input type="text" id="goto" onchange="jumpToLine(this)"/>
+                    <span id="goto-error"></span>
                 </span>
+
+
 
             </div>
 
             {#-  Save Buttons  -#}
-            <div id="save-buttons" style="display:inline-block; margin:5px 10px;">
+            <div id="save-buttons">
                 <button id="Save">Save</button>
                 <button id="Finished">Finished</button>
             </div>

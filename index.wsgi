@@ -77,7 +77,6 @@ def dir_list(dir):
     full_dir_path = os.path.join(freki_root, os.path.basename(dir))
     contents = sorted(os.listdir(full_dir_path), key=lambda x: int(x.split('.')[0]))
     saves = modified_files(dir)
-    # sys.stderr.write('{}\n'.format(saves))
 
     return render_template('browser.html',
                            contents=contents,
@@ -137,7 +136,7 @@ def is_new_block(fd, lineno):
         prev_line = fd.linemap[lineno-1]
         return line.block.block_id != prev_line.block.block_id
 
-def frekidoc_to_json(fd, start_line=1, num_lines=None):
+def frekidoc_to_json(fd, start_line=1, end_line=None):
     """
     Return a dict of span types for each line: prev, new, or cont(inuing)
     
@@ -146,12 +145,11 @@ def frekidoc_to_json(fd, start_line=1, num_lines=None):
     """
 
     # By default, scroll all lines!
-    if num_lines is None:
-        num_lines = max(fd.linemap.keys())
-
     lines = []
 
-    for lineno in range(start_line, start_line+num_lines):
+    end_line = max(fd.linemap) if end_line is None else end_line
+
+    for lineno in range(start_line, end_line + 1):
         if lineno not in fd.linemap:
             break
 
@@ -191,12 +189,16 @@ def load_dir(dir, doc_id):
 
     fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
 
-    # Get what would be the last line:
-    if len(fd) < start_line + num_lines:
-        num_lines = len(fd) - start_line
+    # The freki document's max line number will be it's
+    # len + 1 (because indexed by 1)
+
+    max_lineno = max(fd.linemap)
+
+    # Now, compute the end line:
+    end_line = min(max_lineno, start_line+num_lines-1)
 
 
-    fd_info = frekidoc_to_json(fd, start_line=start_line, num_lines=num_lines)
+    fd_info = frekidoc_to_json(fd, start_line=start_line, end_line = end_line)
 
 
 
@@ -207,8 +209,8 @@ def load_dir(dir, doc_id):
 
     return json.dumps({'html':html,
                        'start_line':start_line,
-                       'end_line':start_line + num_lines,
-                       'max_line':len(fd)-1,
+                       'end_line':end_line,
+                       'max_line':max_lineno,
                        'doc_id':doc_id})
 
 

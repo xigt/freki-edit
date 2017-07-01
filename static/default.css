@@ -36,12 +36,6 @@ tr.cont-span td{
     border-top:solid 10px blueviolet;
 }
 
-#save {
-    position:fixed;
-    top:10px;
-    right:10px;
-    padding:10px;
-}
 
 /* Display for the browser */
 .filerow {
@@ -60,7 +54,37 @@ tr.cont-span td{
     background-color:cyan;
 }
 
-/* Style */
+/* Buttons in the interface */
 .flag-combo {
     width:70px;
+}
+
+/* Top interface options */
+#linerange {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+}
+
+#linerange input {
+    width:40px;
+}
+
+.range {
+    top:10px;
+    position:relative;
+}
+
+#range {
+    display:none;
+}
+
+#goto {
+    width:60px;
+}
+
+#save-buttons {
+    display:inline-block;
+    position: absolute;
+    right: 10px;
 }

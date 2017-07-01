@@ -223,44 +223,65 @@ function selectRow(filename) {
 
 function loadSuccess(result) {
     var htmlResult = result['html'];
-    var startLine = result['start_line'];
+    var myStart = result['start_line'];
     var endLine = result['end_line'];
-    var maxLine = result['max_line'];
+    var myMax = result['max_line'];
 
     $('#editor').html(htmlResult);
     $('#editor').scrollTop(0);
 
+    // Modify the aspects of the
+    $('#range-placeholder').hide();
     $('#range').show();
-    $('#start_line').text(startLine);
+    $('#start_line').text(myStart);
     $('#stop_line').text(endLine);
-    $('#max_lines').text(maxLine);
+    $('#max_lines').text(myMax);
+    $('#goto').val(myStart);
+    $('#goto-error').text('');
 
     // Disable previous when on fist line:
-    if (startLine == 1)
+    if (myStart == 1)
         $('#prev').prop('disabled', true);
     else
         $('#prev').prop('disabled', false);
 
-    localStorage.setItem('startLine', startLine);
-    localStorage.setItem('lastLine', endLine);
+    startLine(myStart);
+    lastLine(endLine);
+    maxLine(myMax);
     localStorage.setItem('docId', result['doc_id']);
-    localStorage.setItem('maxLine', maxLine);
 
     bindCombos();
 }
 
+function ls(k, v) {
+    if (v !== undefined)
+        localStorage.setItem(k, v);
+    else
+        return localStorage.getItem(k);
+}
+
+// Different pagination functions
+function maxLine(newVal) {return ls('maxLine', newVal);}
+function lastLine(newVal) {return ls('lastLine', newVal);}
+function startLine(newVal) {return ls('startLine', newVal);}
 
 function loadNext() {
-    var lastLine = localStorage.getItem('lastLine');
-
-
-    doLoad(localStorage.getItem('docId'), localStorage.getItem('lastLine'));
+    doLoad(localStorage.getItem('docId'), lastLine());
 }
 
 function loadPrev() {
     var startLine = Math.max(1, localStorage.getItem('startLine')-getNumLines());
-
     doLoad(localStorage.getItem('docId'), startLine);
+}
+
+function jumpToLine(elt) {
+    var startLine = parseInt($(elt).val());
+
+    // Do some error checking.
+    if (startLine < maxLine() && startLine >= 1)
+        doLoad(localStorage.getItem('docId'), startLine);
+    else
+        $('#goto-error').text("Invalid line to jump to.")
 }
 
 // Bind the flag fields to easyui combo elements
@@ -330,18 +351,6 @@ function loginSuccess(r) {
     }
     // window.location.href();
     // $('body').html(r);
-}
-
-function showFlags(obj) {
-    var td = $(obj).closest('td');
-    td.find('.flagsshow').hide();
-    td.find('.flags').show();
-}
-
-function hideFlags(obj) {
-    var td = $(obj).closest('td');
-    td.find('.flags').hide();
-    td.find('.flagsshow').show();
 }
 
 // Bind click action to filelist
