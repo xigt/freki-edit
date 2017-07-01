@@ -53,7 +53,8 @@
         <div id="editor"
                 style="width:400px;height:100%; overflow:scroll"
             data-options="region:'center'">
-            No file loaded.
+            <div id="editor-contents">No file loaded.</div>
+            <div id="loading" style="display:none"><img src="{{ url_for('static', filename='loading.gif') }}"/></div>
         </div>
     </div>
 </body>

@@ -197,6 +197,9 @@ function doLoad(filename, startLine) {
     if (startLine === undefined)
         startLine = 1;
 
+    $('#editor-contents').html('');
+    $('#loading').show();
+
     $.ajax({
         method:'GET',
         dataType:'json',
@@ -227,7 +230,8 @@ function loadSuccess(result) {
     var endLine = result['end_line'];
     var myMax = result['max_line'];
 
-    $('#editor').html(htmlResult);
+    $('#loading').hide();
+    $('#editor-contents').html(htmlResult);
     $('#editor').scrollTop(0);
 
     // Modify the aspects of the
