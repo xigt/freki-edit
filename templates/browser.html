@@ -11,19 +11,24 @@
     <div id="mainwindow" class="easyui-layout easyui-resizable" style="height:800px">
 {#        <div data-options="region:'west'" id="filelist" style="width:20%; float:left; max-height:95vh; height:95vh; overflow:scroll">#}
         <div id="controls" data-options="region:'north',split:true" style="height:40px; text-align:right">
-            Save Blah
 
             {#-  Show Pagination Controls -#}
-            <div id="pagination">
-                <div id="linerange">
+            <div id="pagination" style="display:inline-block">
+                <div id="linerange" style="position:absolute;left:10px;top:10px">
                     Show <input type="text" value="100" id="numlines" style="width:40px"/> lines at a time.
-                </div><BR/>
+                </div>
 
                 <span id="range" style="display:none">Showing Lines <span id="start_line"></span> to <span id="stop_line"></span> of <span id="max_lines"></span>
                     <button id="prev" onclick="loadPrev()">Prev</button>
                     <button id="next" onclick="loadNext()">Next</button>
                 </span>
 
+            </div>
+
+            {#-  Save Buttons  -#}
+            <div id="save-buttons" style="display:inline-block; margin:5px 10px;">
+                <button id="Save">Save</button>
+                <button id="Finished">Finished</button>
             </div>
 
         </div>
