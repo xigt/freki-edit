@@ -205,6 +205,7 @@ function doLoad(filename, startLine) {
         dataType:'json',
         data:{start:startLine, range:getNumLines()},
         success:loadSuccess,
+        error:loadError,
         url:baseUrl+'/load/'+enteredDir+filename
     });
 
@@ -224,6 +225,15 @@ function selectRow(filename) {
 
 }
 
+// When loading the document failed.
+function loadError(result) {
+    $('#loading').hide();
+    $('#editor-contents').text("There was an error loading the document.");
+    $('#range-placeholder').show();
+    $('#range').hide();
+}
+
+// When loading the document was successful.
 function loadSuccess(result) {
     var htmlResult = result['html'];
     var myStart = result['start_line'];
