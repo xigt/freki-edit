@@ -1,5 +1,6 @@
 import os, sys, time
 import string
+from collections import OrderedDict
 from configparser import ConfigParser
 
 # =============================================================================
@@ -136,23 +137,17 @@ def is_new_block(fd, lineno):
         prev_line = fd.linemap[lineno-1]
         return line.block.block_id != prev_line.block.block_id
 
-def frekidoc_to_json(fd, start_line=1, end_line=None):
+def read_frekidoc(fd):
     """
     Return a dict of span types for each line: prev, new, or cont(inuing)
     
     :type fd: FrekiDoc 
     :rtype: dict
     """
+    meta = OrderedDict()
+    text = OrderedDict()
 
-    # By default, scroll all lines!
-    lines = []
-
-    end_line = max(fd.linemap) if end_line is None else end_line
-
-    for lineno in range(start_line, end_line + 1):
-        if lineno not in fd.linemap:
-            break
-
+    for lineno in fd.linemap:
         line = fd.linemap[lineno]          # Get the current FrekiLine
         assert isinstance(line, FrekiLine)
 
@@ -160,9 +155,7 @@ def frekidoc_to_json(fd, start_line=1, end_line=None):
         lang_code = line.attrs.get('lang_code')
 
 
-        cur_line_dict = {'text':str(line),
-                         'tag':line.tag,
-                         'lineno':line.lineno}
+        cur_line_dict = {'tag':line.tag}
 
         if line.tag != 'O':
             cur_line_dict['span_type'] = get_span_type(fd, lineno)
@@ -173,9 +166,17 @@ def frekidoc_to_json(fd, start_line=1, end_line=None):
         if is_new_block(fd, lineno):
             cur_line_dict['new_block'] = True
 
-        lines.append(cur_line_dict)
+        meta[lineno] = cur_line_dict
+        text[lineno] = str(line)
 
-    return lines
+    return meta, text
+
+# def filter_frekitext(fd_text)
+
+@app.route('/text/<dir>/<doc_id>', methods=['GET'])
+def load_text(dir, doc_id, start_line=None, num_lines=None):
+    start_line = start_line if start_line is not None else int(request.args.get('start', 1))
+    num_lines = num_lines if num_lines is not None else int(request.args.get('range', 100))
 
 
 
@@ -183,27 +184,27 @@ def frekidoc_to_json(fd, start_line=1, end_line=None):
 @app.route('/load/<dir>/<doc_id>', methods=['GET'])
 def load_dir(dir, doc_id):
 
-    # Get the line start:
+    # Get the range to display:
     start_line = int(request.args.get('start', 1))
     num_lines = int(request.args.get('range', 100))
 
+    # Read in the freki doc...
     fd = FrekiDoc.read(os.path.join(os.path.join(freki_root, dir), doc_id))
-
-    # The freki document's max line number will be it's
-    # len + 1 (because indexed by 1)
-
     max_lineno = max(fd.linemap)
+    end_line = min(max_lineno, start_line + num_lines - 1)
 
-    # Now, compute the end line:
-    end_line = min(max_lineno, start_line+num_lines-1)
+    fd_meta, fd_text = read_frekidoc(fd)
 
-
-    fd_info = frekidoc_to_json(fd, start_line=start_line, end_line = end_line)
-
+    # Now, filter down the amount of text we want to display.
+    lines = OrderedDict()
+    for lineno in fd_text:
+        if start_line <= lineno <= end_line:
+            lines[lineno] = fd_text[lineno]
 
 
     html = render_template('doc.html',
-                           lines=fd_info,
+                           lines=lines,
+                           line_meta=fd_meta,
                            doc_id=doc_id,
                            **config)
 
@@ -211,7 +212,8 @@ def load_dir(dir, doc_id):
                        'start_line':start_line,
                        'end_line':end_line,
                        'max_line':max_lineno,
-                       'doc_id':doc_id})
+                       'doc_id':doc_id,
+                       'meta':fd_meta})
 
 
 

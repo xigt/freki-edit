@@ -70,9 +70,9 @@ function spanSelect(obj) {
     hasBeenModified = true;
 }
 
-function tagSelect(obj) {
-    var tagVal = $(obj).val();
-    var trObj = $(obj).closest('tr');
+function updateTagDisplay(trObj) {
+    var tagS = $(trObj).find('.tag-select');
+    var tagVal = tagS.val();
 
     // remove classes not being used.
     for (i=0;i<tags.length;i++) {
@@ -81,8 +81,12 @@ function tagSelect(obj) {
     }
     trObj.removeClass('tag-noisy');
 
-    var newClass = 'tag-' + tagVal.toLowerCase();
-    trObj.addClass(newClass);
+    if (tagVal.startsWith('*')) {
+        trObj.addClass('tag-noisy');
+    } else {
+        var newClass = 'tag-' + tagVal.toLowerCase();
+        trObj.addClass(newClass);
+    }
 
     /* Toggle the visibility of the span selector on
         Whether the tag is O or not. */
@@ -111,6 +115,10 @@ function tagSelect(obj) {
 
     toggleSpan(trObj);
 
+}
+
+function tagSelect(obj) {
+    updateTagDisplay($(obj).closest('tr'));
     // Mark the file as having been modified
     hasBeenModified = true;
 }
@@ -264,10 +272,16 @@ function loadSuccess(result) {
     maxLine(myMax);
     localStorage.setItem('docId', result['doc_id']);
 
+
+
+    meta(JSON.stringify(result['meta']));
+    // Now do the parsing of the metadata.
+    parseMeta();
+
     bindCombos();
 }
 
-function ls(k, v) {
+function accessLS(k, v) {
     if (v !== undefined)
         localStorage.setItem(k, v);
     else
@@ -275,9 +289,10 @@ function ls(k, v) {
 }
 
 // Different pagination functions
-function maxLine(newVal) {return ls('maxLine', newVal);}
-function lastLine(newVal) {return ls('lastLine', newVal);}
-function startLine(newVal) {return ls('startLine', newVal);}
+function maxLine(newVal) {return accessLS('maxLine', newVal);}
+function lastLine(newVal) {return accessLS('lastLine', newVal);}
+function startLine(newVal) {return accessLS('startLine', newVal);}
+function meta(newVal) {return accessLS('meta', newVal);}
 
 function loadNext() {
     doLoad(localStorage.getItem('docId'), lastLine());
@@ -363,8 +378,6 @@ function loginSuccess(r) {
     } else {
         $('#messagefield').html("That code appears to be invalid, please check the spelling and try again.")
     }
-    // window.location.href();
-    // $('body').html(r);
 }
 
 // Bind click action to filelist

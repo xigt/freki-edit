@@ -10,9 +10,11 @@
 <body>
 {%- from 'line.html' import line %}
 <TABLE>
-    {% for l in lines %}
-        {{ line(l, tags, flags) }}
-        {% if l['new_block'] %}
+    {% for lineno in lines %}
+        {% set line_text = lines[lineno] %}
+        {% set new_block = line_meta[lineno]['new_block'] %}
+        {{ line(lineno, line_text, tags, flags) }}
+        {% if new_block %}
             <TR class="nullrow"><TD>&nbsp;</TD></TR>
         {% endif %}
     {% endfor %}

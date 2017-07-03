@@ -1,49 +1,30 @@
-{%- macro line(l, tags, flags) -%}
-    {%- set cur_tag = l['tag'].split('+')[0] -%}
-    {%- set mul_tags = cur_tag.split('-') %}
-    {% set cur_flags = l['tag'].split('+')[1:] %}
-    {#- Deal with the class of the tag -#}
-    {%- if mul_tags[0].startswith('*') -%}
-        {%- set tag_class='noisy' -%}
-    {%- else -%}
-        {%- set tag_class=mul_tags[0].lower() -%}
-    {%- endif -%}
-    {#- The drop-down for new_span, prev_span -#}
-    {% set span_type = l.get('span_type') %}
-    {#-  -#}
-<TR class="linerow tag-{{ tag_class }}{% if span_type == 'new' %} new-span{% endif %}{% if span_type == 'cont' %} cont-span{% endif %}">
-        <TD class="lineno" lineno="{{ l['lineno'] }}">{{ l['lineno'] }}</TD>
-        {#  -#}
-        {# The drop-down for the tag... -#}
-        <TD>
-            <SELECT class="tag-select" onchange="tagSelect(this)">
-            {%- if mul_tags[0] not in tags %}
-                <OPTION value="{{ mul_tags[0] }}" selected>{{ mul_tags[0] }}</OPTION>
-            {%- endif %}
-            {%- for tag in tags %}
-                <OPTION value="{{ tag }}" {% if tag==mul_tags[0] %}selected{% endif %}>{{ tag }}</OPTION>
-            {%- endfor %}
-            </SELECT>
+{%- macro line(lineno, text, tags, flags) -%}
+
+<TR class="linerow">
+    <TD class="lineno" lineno="{{ lineno }}">{{ lineno }}</TD>
+    {# The drop-down for the tag... -#}
+    <TD>
+        <SELECT class="tag-select" onchange="tagSelect(this)">
+        {%- for tag in tags %}
+            <OPTION value="{{ tag }}">{{ tag }}</OPTION>
+        {%- endfor %}
+        </SELECT>
         </TD>
         {#- Secondary Tag -#}
         <TD>
-            <SELECT class="secondary-tag" {% if tag_class == 'o' %}style="display:none;"{% endif %}>
+            <SELECT class="secondary-tag">
                 <OPTION value=""> </OPTION>
                 {% for tag in tags %}
-                    {% if tag != 'O' %}
-                        <OPTION value="{{ tag }}" {% if mul_tags|length > 1 and mul_tags[1] == tag %}selected{% endif %}>{{ tag }}</OPTION>
-                    {% endif %}
+                    <OPTION value="{{ tag }}">{{ tag }}</OPTION>
                 {% endfor %}
             </SELECT>
         </TD>
         {#- Tertiary Tag -#}
         <TD>
-            <SELECT class="tertiary-tag" {% if tag_class == 'o' %}style="display:none;"{% endif %}>
+            <SELECT class="tertiary-tag">
                 <OPTION value=""> </OPTION>
                 {% for tag in tags %}
-                    {% if tag != 'O' %}
-                        <OPTION value="{{ tag }}" {% if mul_tags|length > 2 and mul_tags[2] == tag %}selected{% endif %}>{{ tag }}</OPTION>
-                    {% endif %}
+                    <OPTION value="{{ tag }}">{{ tag }}</OPTION>
                 {% endfor %}
             </SELECT>
         </TD>
@@ -68,6 +49,6 @@
             </SELECT>
         </TD>
         {#- The line content #}
-        <TD>{{ l['text'].replace(' ', '&nbsp;')|safe }}</TD>
+        <TD>{{ text.replace(' ', '&nbsp;')|safe }}</TD>
 </TR>
 {% endmacro %}
