@@ -27,7 +27,7 @@ function getTag(trObj) {
 function getFullTag(trObj) {
     var multiTag = getTag(trObj);
     var flags = getFlags(trObj);
-    if (flags.length > 0)
+    if (flags.length > 0 && multiTag.toUpperCase() != 'O')
         return multiTag + '+' + flags;
     else
         return multiTag;
@@ -137,39 +137,17 @@ function updateTagMeta(rowObj) {
     lsMeta(meta);
 }
 
-// This function is used to gather all the modifications
-// made in the browser to pass back to the server, for saving
-// the file.
-function gatherData() {
-    // Initialize the array...
-    var data = {};
-
-    // Get all of the rows...
-    var rows = $.find('tr.linerow');
-    for (i=0;i<rows.length;i++) {
-        var row = rows[i];
-        var rowTag = getTag(row);
-        var rowFlags = getFlags(row);
-        var lineNo = getLineNo(row);
-        data[lineNo] = {'tag':rowTag};
-        if (rowTag != 'o') {
-            data[lineNo]['span'] = getSpan(row);
-            data[lineNo]['flags'] = rowFlags;
-        }
-    }
-    return data;
-}
 
 // =============================================================================
 // FUNCTIONS FOR SAVING/"FINISHING" Documents
 // =============================================================================
 
 function save() {
-    filename = selectedRow.attr('filename');
+    var filename = lsDocId();
     $.ajax({
         method:"POST",
         url:baseUrl+"/save/"+enteredDir+filename,
-        data:JSON.stringify(gatherData()),
+        data:JSON.stringify(lsMeta()),
         contentType:'application/json',
         dataType:'json',
         success:saveSuccess,
@@ -192,11 +170,11 @@ function saveError(data) {
 // Finish
 // -------------------------------------------
 function finish() {
-    filename = selectedRow.attr('filename');
+    filename = lsDocId();
     $.ajax({
         method:"POST",
         url:baseUrl+"/finish/"+enteredDir+filename,
-        data:JSON.stringify(gatherData()),
+        data:JSON.stringify(lsMeta()),
         contentType:'application/json',
         success:finishSuccess,
         error:finishError
@@ -204,6 +182,7 @@ function finish() {
 }
 
 function finishSuccess(r) {
+    selectedRow.removeClass('modified');
     selectedRow.addClass('finished');
     alert("File is marked as finished!");
     hasBeenModified = false;
@@ -288,7 +267,7 @@ function finishLoading(result, metaIsNew) {
     setRange(start, end, max);
 
     // Disable previous/next as needed
-    checkPrevNext();
+    checkPrevNext(start, end, max);
 
     // Now do the parsing of the metadata.
     parseMeta();
@@ -410,6 +389,7 @@ function bindFilelist() {
     $('#filelist').datalist({
         onSelect: function (idx, row) {
                         selectRow(row['value']);
+                        selectedRow = $(row);
                         },
         rowStyler: function(idx, row) {
             if (row['value']) {

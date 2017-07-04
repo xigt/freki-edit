@@ -48,6 +48,7 @@ from flask import Flask
 
 app = Flask(__name__)
 application = app
+app.debug = True
 
 def tagsort(tag):
     tagorder = ['L','G','T','M','O']
@@ -272,17 +273,14 @@ def assign_spans(line_data):
     return span_dict
 
 @app.route('/save/<dir>/<doc_id>', methods=['POST'])
-def save(dir, doc_id, data=None):
+def save(dir, doc_id):
     """
     Save the data from the editor to file.
     """
-    if data is None:
-        data = request.get_json()
+    data = request.get_json()
 
-    line_dict = data['lines']
-
-    line_numbers = sorted([int(i) for i in line_dict.keys()])
-    span_ids = assign_spans(line_dict)
+    line_numbers = sorted([int(i) for i in data.keys()])
+    span_ids = assign_spans(data)
     sys.stderr.write(str(span_ids)+'\n')
 
     path = os.path.join(os.path.join(freki_root, dir), doc_id)
@@ -290,17 +288,12 @@ def save(dir, doc_id, data=None):
     fd = FrekiDoc.read(path)
     for lineno in line_numbers:
         line = fd.get_line(lineno)
-        old_tag = line.tag
-        old_flags = old_tag.split('+')[1:]
+        new_tag = data[str(lineno)]['tag']
 
-        new_flags = line_dict[str(lineno)].get('flags', [])
-        new_tag = line_dict[str(lineno)]['tag'].upper()
-
-        if new_tag == 'O':
+        if new_tag.split('+')[0] == 'O':
             line.tag = None
-        elif new_tag != 'NOISY':
-            assign_tag = '+'.join([new_tag] + new_flags)
-            line.tag = assign_tag
+        else:
+            line.tag = new_tag
 
         line.span_id = span_ids.get(lineno)
 
@@ -314,8 +307,7 @@ def save(dir, doc_id, data=None):
 
 @app.route('/finish/<dir>/<doc_id>', methods=['POST'])
 def finish(dir, doc_id):
-    data = request.get_json()
-    save(dir, doc_id, data=data)
+    save(dir, doc_id)
     flag_complete(dir, doc_id)
     return Response(response='OK', status=200)
 

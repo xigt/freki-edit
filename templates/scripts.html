@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='easy_ui/themes/default/easyui.css') }}"/>
     <!-- Snippets of javascript for later -->
     <script type="text/javascript">
-        var selectedRow=null;
+        var selectedRow=undefined;
         var baseUrl='{{ url_for('home') }}';
         var enteredDir='{{ dir }}/';
         var hasBeenModified=false;
