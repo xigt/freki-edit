@@ -2,28 +2,15 @@
  * Created by rgeorgi on 3/16/17.
  */
 
-// This function is intended
-// to check all the flags in the
-// current flagcell (TD) and set the
-// "flagged" status appropriately.
-function checkFlags(obj) {
-    var tdObj = $(obj).closest('td');
-    var checked = tdObj.find(':checked');
-    if (checked.length > 0) {
-        tdObj.addClass('flagged');
-    } else {
-        tdObj.removeClass('flagged');
-    }
-}
 
 function getFlags(trObj) {
-    var checked = $(trObj).find('.flags input:checked');
+    var panel = $(trObj).find('.flag-combo').combo('panel');
+    var checked = panel.find(':checked');
     var flagArr = [];
     checked.each(function(idx, elt) {
         flagArr.push($(elt).val());
     });
-    console.log(flagArr.join('+'));
-    return flagArr;
+    return flagArr.join('+');
 }
 
 function getTag(trObj) {
@@ -37,9 +24,16 @@ function getTag(trObj) {
         return [primaryTag,secondaryTag,tertiaryTag].filter(function(x){return x}).join('-');
 }
 
-function getSpan(trObj) {
-    return $(trObj).find('.span-select').val();
+function getFullTag(trObj) {
+    var multiTag = getTag(trObj);
+    var flags = getFlags(trObj);
+    if (flags.length > 0)
+        return multiTag + '+' + flags;
+    else
+        return multiTag;
 }
+
+function getSpan(trObj) {return $(trObj).find('.span-select').val();}
 
 function getLineNo(trObj) {
     return parseInt($(trObj).find('.lineno').attr('lineno'));
@@ -66,8 +60,18 @@ function toggleSpan(trObj) {
 function spanSelect(obj) {
     var trObj = $(obj).closest('tr');
     toggleSpan(trObj);
+    updateSpanMeta(trObj);
     // Mark the file as having been modified
     hasBeenModified = true;
+}
+
+
+function updateSpanMeta(trObj) {
+    var spanType = getSpan(trObj);
+    var lineno = getLineNo(trObj);
+    var meta = lsMeta();
+    meta[lineno]['span_type'] = spanType.split('-')[0];
+    lsMeta(meta);
 }
 
 function updateTagDisplay(trObj) {
@@ -110,7 +114,6 @@ function updateTagDisplay(trObj) {
         spanSel.show();
         secondaryTag.show();
         tertiaryTag.show();
-        checkFlags(flagTD);
     }
 
     toggleSpan(trObj);
@@ -118,9 +121,20 @@ function updateTagDisplay(trObj) {
 }
 
 function tagSelect(obj) {
-    updateTagDisplay($(obj).closest('tr'));
+    var tr = $(obj).closest('tr')
+    updateTagDisplay(tr);
+    updateTagMeta(tr);
     // Mark the file as having been modified
     hasBeenModified = true;
+}
+
+// Update the stored metadata when the tag is changed.
+function updateTagMeta(rowObj) {
+    var tag = getFullTag(rowObj).toUpperCase();
+    var lineNo = getLineNo(rowObj);
+    var meta = lsMeta();
+    meta[lineNo]['tag'] = tag;
+    lsMeta(meta);
 }
 
 // This function is used to gather all the modifications
@@ -128,7 +142,7 @@ function tagSelect(obj) {
 // the file.
 function gatherData() {
     // Initialize the array...
-    var data = {'doc_id':docId, 'lines':{}};
+    var data = {};
 
     // Get all of the rows...
     var rows = $.find('tr.linerow');
@@ -137,10 +151,10 @@ function gatherData() {
         var rowTag = getTag(row);
         var rowFlags = getFlags(row);
         var lineNo = getLineNo(row);
-        data['lines'][lineNo] = {'tag':rowTag};
+        data[lineNo] = {'tag':rowTag};
         if (rowTag != 'o') {
-            data['lines'][lineNo]['span'] = getSpan(row);
-            data['lines'][lineNo]['flags'] = rowFlags;
+            data[lineNo]['span'] = getSpan(row);
+            data[lineNo]['flags'] = rowFlags;
         }
     }
     return data;
@@ -201,20 +215,33 @@ function finishError(r) {
 
 function getNumLines() {return parseInt($('#numlines').val());}
 
-function doLoad(filename, startLine) {
-    if (startLine === undefined)
-        startLine = 1;
+// Load the text or full metadata.
+function showLoading() { $('#editor-contents').html(''); $('#loading').show(); }
+function hideLoading(content) { $('#loading').hide(); $('#editor-contents').html(content); $('#editor').scrollTop(0);}
 
-    $('#editor-contents').html('');
-    $('#loading').show();
+// Load data from the server.
+function doLoad(filename, startLine, includeMeta) {
+    // Set startline to 1 if undefined.
+    if (startLine === undefined) startLine = 1;
+    // includemeta is true by default.
+    if (includeMeta === undefined) includeMeta = true;
+
+    // Show the loading spinner while we wait for results
+    showLoading();
+
+    // Switch between the text-only request and the
+    // full metadata update
+    var successFunc = includeMeta ? loadSuccess : textSuccess;
+    var apiHook = includeMeta ? '/load/' : '/text/';
+
 
     $.ajax({
         method:'GET',
         dataType:'json',
         data:{start:startLine, range:getNumLines()},
-        success:loadSuccess,
+        success:successFunc,
         error:loadError,
-        url:baseUrl+'/load/'+enteredDir+filename
+        url:baseUrl+apiHook+enteredDir+filename
     });
 
 }
@@ -233,90 +260,95 @@ function selectRow(filename) {
 
 }
 
+
+
+function unsetRange() {$('#range-placeholder').show(); $('#range').hide(); }
+function setRange(start, stop, max) {$('#range-placeholder').hide();$('#range').show();$('#start_line').text(start);$('#stop_line').text(stop);$('#max_lines').text(max);$('#goto').val(start);$('#goto-error').text('');}
+
+// Check the current displayed range
+// and disable the prev/next buttons as required.
+function checkPrevNext(start, stop, max) {
+    if (start == 1) $('#prev').prop('disabled', true); else $('#prev').prop('disabled', false);
+    if (stop >= max) $('#next').prop('disabled', true); else $('#next').prop('disabled', false);
+}
+
+function finishLoading(result, metaIsNew) {
+    var html = result['html'];
+    var start = result['start_line']; lsStart(start);
+    var end = result['end_line']; lsLast(end);
+    var max = result['max_line']; lsMax(max);
+    var docid = result['doc_id']; lsDocId(docid);
+    if (metaIsNew) {console.log('Reloading meta'); lsMeta(result['meta']);}
+
+    // Hide the loading spinner and load
+    // the requested HTML content.
+    hideLoading(html);
+
+    // Display the correct line range.
+    setRange(start, end, max);
+
+    // Disable previous/next as needed
+    checkPrevNext();
+
+    // Now do the parsing of the metadata.
+    parseMeta();
+
+    // update the combo box displays.
+    bindCombos();
+}
+
+// -------------------------------------------
+// Load functions
+// -------------------------------------------
+
+// When loading the document was successful.
+function loadSuccess(result) {finishLoading(result, true);}
+
 // When loading the document failed.
 function loadError(result) {
     $('#loading').hide();
     $('#editor-contents').text("There was an error loading the document.");
-    $('#range-placeholder').show();
-    $('#range').hide();
+    unsetRange();
 }
 
-// When loading the document was successful.
-function loadSuccess(result) {
-    var htmlResult = result['html'];
-    var myStart = result['start_line'];
-    var endLine = result['end_line'];
-    var myMax = result['max_line'];
-
-    $('#loading').hide();
-    $('#editor-contents').html(htmlResult);
-    $('#editor').scrollTop(0);
-
-    // Modify the aspects of the
-    $('#range-placeholder').hide();
-    $('#range').show();
-    $('#start_line').text(myStart);
-    $('#stop_line').text(endLine);
-    $('#max_lines').text(myMax);
-    $('#goto').val(myStart);
-    $('#goto-error').text('');
-
-    // Disable previous when on fist line:
-    if (myStart == 1)
-        $('#prev').prop('disabled', true);
-    else
-        $('#prev').prop('disabled', false);
-
-    startLine(myStart);
-    lastLine(endLine);
-    maxLine(myMax);
-    localStorage.setItem('docId', result['doc_id']);
-
-
-
-    meta(JSON.stringify(result['meta']));
-    // Now do the parsing of the metadata.
-    parseMeta();
-
-    bindCombos();
-}
-
-function accessLS(k, v) {
-    if (v !== undefined)
-        localStorage.setItem(k, v);
-    else
-        return localStorage.getItem(k);
-}
+function textSuccess(result) {finishLoading(result, false);}
 
 // Different pagination functions
-function maxLine(newVal) {return accessLS('maxLine', newVal);}
-function lastLine(newVal) {return accessLS('lastLine', newVal);}
-function startLine(newVal) {return accessLS('startLine', newVal);}
-function meta(newVal) {return accessLS('meta', newVal);}
+function accessLS(k, v) {if (v !== undefined) localStorage.setItem(k, v); else  return localStorage.getItem(k);}
+function lsMax(newVal) {return accessLS('maxLine', newVal);}
+function lsLast(newVal) {return accessLS('lastLine', newVal);}
+function lsStart(newVal) {return accessLS('startLine', newVal);}
+function lsDocId(newVal) {return accessLS('docId', newVal);}
 
-function loadNext() {
-    doLoad(localStorage.getItem('docId'), lastLine());
+function lsMeta(newMeta) {
+    if (newMeta === undefined)
+        return JSON.parse(localStorage.getItem('meta'));
+    else
+        localStorage.setItem('meta',JSON.stringify(newMeta))
 }
 
+
+function loadNext() {doLoad(lsDocId(), lsLast(), false);}
+
 function loadPrev() {
-    var startLine = Math.max(1, localStorage.getItem('startLine')-getNumLines());
-    doLoad(localStorage.getItem('docId'), startLine);
+    var startLine = Math.max(1, lsStart()-getNumLines());
+    doLoad(lsDocId(), startLine, false);
 }
 
 function jumpToLine(elt) {
-    var startLine = parseInt($(elt).val());
+    var startLine = parseInt($(elt).val(), false);
 
     // Do some error checking.
-    if (startLine < maxLine() && startLine >= 1)
-        doLoad(localStorage.getItem('docId'), startLine);
+    if (startLine < lsMax() && startLine >= 1)
+        doLoad(lsDocId(), startLine, false);
     else
         $('#goto-error').text("Invalid line to jump to.")
 }
 
 // Bind the flag fields to easyui combo elements
 function bindCombos() {
-    $('.flagcell').each(function(idx, elt) {
-        var flagCombo = $(elt).find('.flag-combo');
+    $('.flagcell').each(function(idx, flagcellElt) {
+        var flagCombo = $(flagcellElt).find('.flag-combo');
 
         flagCombo.combo({
             multiple:true,
@@ -325,32 +357,28 @@ function bindCombos() {
             panelHeight: 'auto'
         });
 
-        var flags = $(elt).find('.flags');
+        var flags = $(flagcellElt).find('.flags');
         var panel = flagCombo.combo('panel');
 
         panel.append(flags);
 
         // Now, each time a checkbox is clicked, update the flags.
-        flags.find('input').each(function (i, elt) {
-            $(elt).click(function() {
-                updateCombo(flagCombo, flags);
+        flags.find('input').each(function (i, checkElt) {
+            $(checkElt).click(function() {
+                updateFlagDisplay(flagcellElt);
+                var tr = $(flagcellElt).closest('tr');
+                updateTagMeta(tr);
             });
         });
 
-        updateCombo(flagCombo, flags);
+        updateFlagDisplay(flagcellElt);
     });
 
 }
 
-function updateCombo(comboElt, flags) {
-    var flagArr = [];
-    $(flags).find('input').each(function(i, flagElt) {
-        var v = $(flagElt).val();
-        if ($(flagElt).is(':checked')) {
-            flagArr.push(v);
-        }
-    });
-    $(comboElt).combo('setText', flagArr.join('+'));
+function updateFlagDisplay(flagCellElt) {
+    var comboElt = $(flagCellElt).find('.flag-combo');
+    comboElt.combo('setText', getFlags(flagCellElt));
 }
 
 // Log in (use directory)
@@ -368,10 +396,7 @@ function login() {
     }
 }
 
-function loginError() {
-    $('#messagefield').html("There appears to have been an error on the server. Please try again later.");
-}
-
+function loginError() {$('#messagefield').html("There appears to have been an error on the server. Please try again later.");}
 function loginSuccess(r) {
     if (r['exists']) {
         window.location.assign(baseUrl+'/dir/'+r['dir']);
@@ -410,6 +435,6 @@ $(window).resize(function() {
 });
 
 $(document).ready(function (){
-    // doResize();
     bindFilelist();
+    doResize();
 });

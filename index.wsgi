@@ -171,19 +171,7 @@ def read_frekidoc(fd):
 
     return meta, text
 
-# def filter_frekitext(fd_text)
-
-@app.route('/text/<dir>/<doc_id>', methods=['GET'])
-def load_text(dir, doc_id, start_line=None, num_lines=None):
-    start_line = start_line if start_line is not None else int(request.args.get('start', 1))
-    num_lines = num_lines if num_lines is not None else int(request.args.get('range', 100))
-
-
-
-
-@app.route('/load/<dir>/<doc_id>', methods=['GET'])
-def load_dir(dir, doc_id):
-
+def get_frekitext(dir, doc_id):
     # Get the range to display:
     start_line = int(request.args.get('start', 1))
     num_lines = int(request.args.get('range', 100))
@@ -201,19 +189,32 @@ def load_dir(dir, doc_id):
         if start_line <= lineno <= end_line:
             lines[lineno] = fd_text[lineno]
 
-
     html = render_template('doc.html',
                            lines=lines,
                            line_meta=fd_meta,
                            doc_id=doc_id,
                            **config)
 
-    return json.dumps({'html':html,
-                       'start_line':start_line,
-                       'end_line':end_line,
-                       'max_line':max_lineno,
-                       'doc_id':doc_id,
-                       'meta':fd_meta})
+    data = {'start_line': start_line,
+            'end_line': end_line,
+            'max_line': max_lineno,
+            'doc_id': doc_id,
+            'html':html,
+            'meta':fd_meta}
+
+    return data
+
+@app.route('/text/<dir>/<doc_id>', methods=['GET'])
+def load_text(dir, doc_id):
+    data = get_frekitext(dir, doc_id)
+    del data['meta']
+    return json.dumps(data)
+
+
+@app.route('/load/<dir>/<doc_id>', methods=['GET'])
+def load_dir(dir, doc_id):
+    data = get_frekitext(dir, doc_id)
+    return json.dumps(data)
 
 
 

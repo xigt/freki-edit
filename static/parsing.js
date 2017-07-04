@@ -3,7 +3,7 @@
  */
 
 function parseMeta() {
-    var metaJSON = JSON.parse(meta());
+    var metaJSON = lsMeta();
 
     $('.linerow').each(function(idx, obj) {
         var lineno = parseInt($(obj).find('.lineno').attr('lineno'));

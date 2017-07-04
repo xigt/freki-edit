@@ -12,7 +12,7 @@
         </TD>
         {#- Secondary Tag -#}
         <TD>
-            <SELECT class="secondary-tag">
+            <SELECT class="secondary-tag" onchange="tagSelect(this)">
                 <OPTION value=""> </OPTION>
                 {% for tag in tags %}
                     <OPTION value="{{ tag }}">{{ tag }}</OPTION>
@@ -21,7 +21,7 @@
         </TD>
         {#- Tertiary Tag -#}
         <TD>
-            <SELECT class="tertiary-tag">
+            <SELECT class="tertiary-tag" onchange="tagSelect(this)">
                 <OPTION value=""> </OPTION>
                 {% for tag in tags %}
                     <OPTION value="{{ tag }}">{{ tag }}</OPTION>
@@ -34,7 +34,7 @@
             <DIV class="flag-combo"></DIV>
             <DIV class="flags">
                 {% for flag in flags %}
-                    <input type="checkbox" name="flag" onclick="checkFlags(this);"
+                    <input type="checkbox" name="flag"
                            value="{{ flag }}" {% if flag in cur_flags %} checked{% endif %}>{{ flag }}<br/>
                 {% endfor %}
             </DIV>
