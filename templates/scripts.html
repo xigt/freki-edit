@@ -10,7 +10,7 @@
     <!-- Snippets of javascript for later -->
     <script type="text/javascript">
         var selectedRow=undefined;
-        var baseUrl='{{ url_for('home') }}';
+        var baseUrl='{{ base_url }}';
         var enteredDir='{{ dir }}/';
         var hasBeenModified=false;
         var tags = [{% for tag in tags %}
