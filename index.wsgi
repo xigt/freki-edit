@@ -50,6 +50,9 @@ app = Flask(__name__)
 application = app
 app.debug = True
 
+server = c.get('server_name')
+app.config['SERVER_NAME'] = server if (server.strip() and server.lower() != 'localhost') else None
+
 def tagsort(tag):
     tagorder = ['L','G','T','M','O']
     if tag in tagorder:
