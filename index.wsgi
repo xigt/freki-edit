@@ -284,7 +284,6 @@ def save(dir, doc_id):
 
     line_numbers = sorted([int(i) for i in data.keys()])
     span_ids = assign_spans(data)
-    sys.stderr.write(str(span_ids)+'\n')
 
     path = os.path.join(os.path.join(freki_root, dir), doc_id)
 
