@@ -77,7 +77,10 @@ def isvalid(dir):
 @app.route('/dir/<dir>')
 def dir_list(dir):
     full_dir_path = os.path.join(freki_root, os.path.basename(dir))
-    contents = sorted(os.listdir(full_dir_path), key=lambda x: int(x.split('.')[0]))
+    try:
+        contents = sorted(os.listdir(full_dir_path), key=lambda x: int(x.split('.')[0]))
+    except:
+        contents = sorted(os.listdir(full_dir_path))
     saves = modified_files(dir)
 
     return render_template('browser.html',
