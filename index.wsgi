@@ -232,7 +232,7 @@ def assign_spans(line_data):
     line_numbers = sorted([int(i) for i in line_data.keys()])
     span_count = 0
 
-    def get_span_type(lineno): return line_data[str(lineno)].get('span')
+    def get_span_type(lineno): return line_data[str(lineno)].get('span_type')
     def name_lettered_span(span_num, num_prev_spans): return 's{}-{}'.format(span_num, string.ascii_lowercase[num_prev_spans])
 
     cur_span = None
@@ -240,11 +240,11 @@ def assign_spans(line_data):
     for lineno in line_numbers:
         span_type = get_span_type(lineno)
 
-        if span_type == 'new-span':
+        if span_type == 'new':
             span_count += 1
             cur_span = 's{}'.format(span_count)
             span_dict[lineno] = cur_span
-        elif span_type == 'cont-span':
+        elif span_type == 'cont':
             # If the current span is "continuing,"
             # walk backward until a "new" span is
             # seen. This will make this span
@@ -253,11 +253,11 @@ def assign_spans(line_data):
             prev_line_counter = lineno-1
             while prev_line_counter > 0:
                 prev_span_type = get_span_type(prev_line_counter)
-                if prev_span_type == 'new-span':
+                if prev_span_type == 'new':
                     num_prev_spans += 1
                     span_dict[prev_line_counter] = name_lettered_span(span_count, 0)
                     break
-                elif prev_span_type == 'cont-span':
+                elif prev_span_type == 'cont':
                     num_prev_spans += 1
 
                 prev_line_counter -=1
@@ -268,9 +268,9 @@ def assign_spans(line_data):
     cur_span = None
     for lineno in line_numbers:
         span_type = get_span_type(lineno)
-        if span_type in ['new-span', 'cont-span']:
+        if span_type in ['new', 'cont']:
             cur_span = span_dict[lineno]
-        elif span_type == 'prev-span':
+        elif span_type == 'prev':
             span_dict[lineno] = cur_span
 
     return span_dict
